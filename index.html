@@ -491,7 +491,11 @@ function placePng(id){
       top:CH/2-img.getScaledHeight()/2,
       id:'obj_'+Date.now(),
       _label:s.name,
-      _size:s.size   // เก็บ category ไว้คำนวณราคา
+      _size:s.size,                       // เก็บ category ไว้คำนวณราคา
+      // ── PRINT-ON-FABRIC BLEND (Option C: hybrid) ──
+      globalCompositeOperation:'multiply',
+      opacity:0.88,
+      shadow:new fabric.Shadow({color:'rgba(30,28,26,0.22)',offsetX:0,offsetY:1,blur:2})
     });
     canvas.add(img);canvas.setActiveObject(img);canvas.renderAll();
     saveHistory();refreshLayers();showToast('วาง '+s.name+' ('+s.size+')');closeSheet();
@@ -505,7 +509,13 @@ function addText(){
   const font=document.getElementById('font-select').value;
   const color=document.getElementById('text-color').value;
   const size=parseInt(document.getElementById('font-size').value)||28;
-  place(new fabric.IText(str,{left:CW/2-50,top:CH/2-14,fontSize:size,fontFamily:font,fill:color,selectable:true,id:'obj_'+Date.now(),_label:str.slice(0,16)}));
+  place(new fabric.IText(str,{
+    left:CW/2-50,top:CH/2-14,fontSize:size,fontFamily:font,fill:color,
+    selectable:true,id:'obj_'+Date.now(),_label:str.slice(0,16),
+    // ── เนียนกับผ้า: shadow เบาๆ คล้ายลายปัก ──
+    opacity:0.95,
+    shadow:new fabric.Shadow({color:'rgba(30,28,26,0.35)',offsetX:0,offsetY:1,blur:1.5})
+  }));
   document.getElementById('text-input').value='';
 }
 
@@ -540,7 +550,7 @@ function deleteSelected(){
 
 let history=[],histCursor=-1;
 function saveHistory(){
-  const j=JSON.stringify(canvas.toJSON(['id','_label']));
+  const j=JSON.stringify(canvas.toJSON(['id','_label','_size']));
   if(histCursor<history.length-1)history=history.slice(0,histCursor+1);
   history.push(j);if(history.length>50)history.shift();else histCursor++;updateUR();
 }
