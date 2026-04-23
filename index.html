@@ -306,9 +306,9 @@ html,body{
 
     <div class="panel active" id="panel-png">
       <div class="sub-tabs" id="acc-sub-tabs">
-        <button class="sub-tab active" data-size="small" onclick="switchAccSize('small',this)">Small <span class="pct">20%</span></button>
-        <button class="sub-tab" data-size="medium" onclick="switchAccSize('medium',this)">Medium <span class="pct">25%</span></button>
-        <button class="sub-tab" data-size="large" onclick="switchAccSize('large',this)">Large <span class="pct">30%</span></button>
+        <button class="sub-tab active" data-size="small" onclick="switchAccSize('small',this)">Small <span class="pct">5%</span></button>
+        <button class="sub-tab" data-size="medium" onclick="switchAccSize('medium',this)">Medium <span class="pct">7%</span></button>
+        <button class="sub-tab" data-size="large" onclick="switchAccSize('large',this)">Large <span class="pct">10%</span></button>
       </div>
       <div class="png-grid" id="png-grid"></div>
     </div>
@@ -375,7 +375,7 @@ SHIRTS.forEach((s,i)=>{
 const CW=360,CH=400;
 // ── PRICING CONFIG ──
 const PRICE_SHIRT=250, PRICE_S=25, PRICE_M=40, PRICE_L=50, PRICE_TEXT_PER_CHAR=10;
-const SIZE_RATIO={small:0.20, medium:0.25, large:0.30};
+const SIZE_RATIO={small:0.05, medium:0.07, large:0.10};
 const LINE_ID='@863tjnsq';
 const LINE_ADD_URL='https://line.me/R/ti/p/'+encodeURIComponent(LINE_ID);
 const canvas=new fabric.Canvas('c',{width:CW,height:CH,backgroundColor:'#FDFBF8',preserveObjectStacking:true});
@@ -480,7 +480,7 @@ function renderPngGrid(){
 function placePng(id){
   const s=BUILTIN.find(x=>x.id===id);if(!s)return;
   const src = s.url || '';
-  const ratio = SIZE_RATIO[s.size] || 0.20;
+  const ratio = SIZE_RATIO[s.size] || 0.05;
   fabric.Image.fromURL(src,img=>{
     // auto-scale ตาม % ของความกว้างเสื้อ
     const targetW = (cardiganObj ? cardiganObj.getScaledWidth() : CW*0.75) * ratio;
