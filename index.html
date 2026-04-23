@@ -492,14 +492,12 @@ function placePng(id){
       id:'obj_'+Date.now(),
       _label:s.name,
       _size:s.size,                       // เก็บ category ไว้คำนวณราคา
-      // ── PRINT-ON-FABRIC BLEND (Option C: hybrid) ──
-      globalCompositeOperation:'multiply',
-      opacity:0.88,
-      shadow:new fabric.Shadow({color:'rgba(30,28,26,0.22)',offsetX:0,offsetY:1,blur:2})
+      // ── PATCH LOOK: สีเต็ม + เงาเบาๆ ให้ไม่ลอย ──
+      shadow:new fabric.Shadow({color:'rgba(0,0,0,0.20)',offsetX:0,offsetY:1,blur:2})
     });
     canvas.add(img);canvas.setActiveObject(img);canvas.renderAll();
     saveHistory();refreshLayers();showToast('วาง '+s.name+' ('+s.size+')');closeSheet();
-  });
+  },{crossOrigin:'anonymous'});
 }
 
 function place(obj){canvas.add(obj);canvas.setActiveObject(obj);canvas.renderAll();saveHistory();refreshLayers();closeSheet();}
@@ -513,8 +511,7 @@ function addText(){
     left:CW/2-50,top:CH/2-14,fontSize:size,fontFamily:font,fill:color,
     selectable:true,id:'obj_'+Date.now(),_label:str.slice(0,16),
     // ── เนียนกับผ้า: shadow เบาๆ คล้ายลายปัก ──
-    opacity:0.95,
-    shadow:new fabric.Shadow({color:'rgba(30,28,26,0.35)',offsetX:0,offsetY:1,blur:1.5})
+    shadow:new fabric.Shadow({color:'rgba(0,0,0,0.28)',offsetX:0,offsetY:1,blur:1.5})
   }));
   document.getElementById('text-input').value='';
 }
@@ -698,6 +695,8 @@ function confirmSave(){
     try{ navigator.clipboard && navigator.clipboard.writeText(text); }catch(e){}
     // เปิด LINE modal แจ้ง Add Line
     openLineModalAfterSave();
+  }).catch(err=>{
+    console.error('Save flow failed:',err);
   });
 }
 
@@ -713,44 +712,68 @@ function buildOrderText(p){
 }
 
 // ── EXPORT CANVAS + PRICE FOOTER ──
+function triggerDownload(href, filename){
+  const a=document.createElement('a');
+  a.href=href; a.download=filename;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+}
+
 function exportWithPriceFooter(p){
-  return new Promise(resolve=>{
+  return new Promise((resolve,reject)=>{
     canvas.discardActiveObject(); canvas.renderAll();
     const mult=3;
-    const baseUrl=canvas.toDataURL({format:'png',multiplier:mult});
+    let baseUrl;
+    try{
+      baseUrl=canvas.toDataURL({format:'png',multiplier:mult});
+    }catch(err){
+      console.error('toDataURL failed (canvas tainted?):',err);
+      showToast('⚠ Save ไม่สำเร็จ: รูป sticker โหลดผิด CORS');
+      reject(err); return;
+    }
     const img=new Image();
     img.onload=()=>{
-      const footerH=Math.round(76*mult);
-      const off=document.createElement('canvas');
-      off.width=img.width; off.height=img.height+footerH;
-      const ctx=off.getContext('2d');
-      // background
-      ctx.fillStyle='#FDFBF8'; ctx.fillRect(0,0,off.width,off.height);
-      // canvas image
-      ctx.drawImage(img,0,0);
-      // footer separator
-      ctx.fillStyle='#F0E3D6'; ctx.fillRect(0,img.height, off.width, Math.round(2*mult));
-      // footer text
-      const cx=off.width/2;
-      const fy=img.height+Math.round(2*mult);
-      ctx.textAlign='center'; ctx.textBaseline='top'; ctx.fillStyle='#1E1C1A';
-      ctx.font='500 '+(9*mult)+'px "DM Sans", sans-serif';
-      ctx.fillText('CASUAL LOOK  ·  CARDIGAN STUDIO', cx, fy+Math.round(10*mult));
-      ctx.fillStyle='#9A8F85';
-      ctx.font='500 '+(8*mult)+'px "DM Sans", sans-serif';
-      ctx.fillText('Order '+__lastOrderNo+'   ·   LINE '+LINE_ID, cx, fy+Math.round(24*mult));
-      ctx.fillStyle='#B8864C';
-      ctx.font='400 '+(20*mult)+'px "Playfair Display", Georgia, serif';
-      ctx.fillText('Total  ฿'+p.total.toLocaleString(), cx, fy+Math.round(40*mult));
-      // download
-      off.toBlob(blob=>{
-        const url=URL.createObjectURL(blob);
-        const a=document.createElement('a');
-        a.href=url; a.download='casual-look-'+__lastOrderNo+'.png'; a.click();
-        setTimeout(()=>URL.revokeObjectURL(url),1000);
-        resolve();
-      },'image/png');
+      try{
+        const footerH=Math.round(76*mult);
+        const off=document.createElement('canvas');
+        off.width=img.width; off.height=img.height+footerH;
+        const ctx=off.getContext('2d');
+        ctx.fillStyle='#FDFBF8'; ctx.fillRect(0,0,off.width,off.height);
+        ctx.drawImage(img,0,0);
+        ctx.fillStyle='#F0E3D6'; ctx.fillRect(0,img.height, off.width, Math.round(2*mult));
+        const cx=off.width/2;
+        const fy=img.height+Math.round(2*mult);
+        ctx.textAlign='center'; ctx.textBaseline='top'; ctx.fillStyle='#1E1C1A';
+        ctx.font='500 '+(9*mult)+'px "DM Sans", sans-serif';
+        ctx.fillText('CASUAL LOOK  ·  CARDIGAN STUDIO', cx, fy+Math.round(10*mult));
+        ctx.fillStyle='#9A8F85';
+        ctx.font='500 '+(8*mult)+'px "DM Sans", sans-serif';
+        ctx.fillText('Order '+__lastOrderNo+'   ·   LINE '+LINE_ID, cx, fy+Math.round(24*mult));
+        ctx.fillStyle='#B8864C';
+        ctx.font='400 '+(20*mult)+'px "Playfair Display", Georgia, serif';
+        ctx.fillText('Total  ฿'+p.total.toLocaleString(), cx, fy+Math.round(40*mult));
+        const filename='casual-look-'+__lastOrderNo+'.png';
+        if(off.toBlob){
+          off.toBlob(blob=>{
+            if(!blob){ // fallback
+              triggerDownload(off.toDataURL('image/png'), filename);
+            }else{
+              const url=URL.createObjectURL(blob);
+              triggerDownload(url, filename);
+              setTimeout(()=>URL.revokeObjectURL(url),2000);
+            }
+            resolve();
+          },'image/png');
+        }else{
+          triggerDownload(off.toDataURL('image/png'), filename);
+          resolve();
+        }
+      }catch(err){
+        console.error('Draw/download failed:',err);
+        showToast('⚠ Save ไม่สำเร็จ');
+        reject(err);
+      }
     };
+    img.onerror=(err)=>{console.error('img load failed',err); reject(err);};
     img.src=baseUrl;
   });
 }
