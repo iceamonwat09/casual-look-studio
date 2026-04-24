@@ -14,7 +14,7 @@
   --bd:rgba(30,28,26,0.09);--bd-strong:rgba(30,28,26,0.14);
   --shadow-sm:0 1px 3px rgba(30,28,26,.06);
   --shadow-md:0 6px 18px rgba(30,28,26,.09);
-  --sheet-peek:92px;
+  --sheet-peek:86px;
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html,body{
@@ -54,6 +54,11 @@ html,body{
 .pill-a{background:var(--alight);color:var(--accent);box-shadow:var(--shadow-sm)}
 .pill-b{background:var(--char);color:var(--warm);box-shadow:var(--shadow-sm)}
 #canvas-container{position:relative;z-index:1;overflow:hidden;background:repeating-conic-gradient(#eceae6 0% 25%,#f8f8f8 0% 50%) 0 0/14px 14px;border-radius:14px;box-shadow:0 8px 24px rgba(30,28,26,.12),0 0 0 1px rgba(30,28,26,.05)}
+.zoom-ctl{position:absolute;top:14px;right:14px;z-index:6;display:flex;flex-direction:column;gap:4px;background:rgba(253,251,248,.88);border:.5px solid var(--bd);border-radius:11px;padding:3px;box-shadow:var(--shadow-md);backdrop-filter:blur(8px)}
+.zoom-btn{width:28px;height:28px;border:none;background:transparent;color:var(--char);font-size:14px;font-weight:500;cursor:pointer;border-radius:8px;display:flex;align-items:center;justify-content:center;transition:all .15s;padding:0;line-height:1;font-family:'DM Sans',sans-serif}
+.zoom-btn:active{background:var(--alight);transform:scale(.9)}
+.zoom-btn.reset{font-size:11px}
+.zoom-display{font-size:9px;color:var(--stone);text-align:center;letter-spacing:.5px;padding:2px 0;font-family:'DM Sans',sans-serif;font-weight:500;border-top:.5px solid var(--bd);border-bottom:.5px solid var(--bd);margin:1px 0}
 .color-strip{display:flex;gap:8px;align-items:center;margin-top:6px;z-index:2;position:relative;overflow-x:auto;padding:3px 8px;scrollbar-width:none;max-width:360px}
 .color-strip::-webkit-scrollbar{display:none}
 .csw{display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;flex-shrink:0}
@@ -69,7 +74,8 @@ html,body{
   box-shadow:0 -2px 12px rgba(30,28,26,.04);
 }
 .ctrl-bar.show{display:block}
-.ctrl-row{display:flex;gap:10px;align-items:center;justify-content:center;margin-bottom:0}
+.ctrl-row{display:flex;gap:12px;align-items:center;justify-content:center;margin-bottom:6px}
+.ctrl-row:last-child{margin-bottom:0}
 .cb{height:34px;min-width:34px;padding:0 10px;border:.5px solid var(--bd);border-radius:10px;background:var(--cream);color:var(--char);font-size:12px;font-family:'DM Sans',sans-serif;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:4px;transition:all .12s;white-space:nowrap;user-select:none;-webkit-user-select:none;touch-action:manipulation}
 .cb:active,.cb.hold-active{background:var(--alight);border-color:var(--accent);transform:scale(.93);box-shadow:inset 0 2px 4px rgba(201,149,107,.2)}
 .cb.danger{background:#fdecec;color:#c0392b;border-color:#f5c6c6}
@@ -92,13 +98,15 @@ html,body{
 .bottom-sheet.open{height:410px}
 .sheet-handle{width:44px;height:4px;background:rgba(30,28,26,.18);border-radius:2px;margin:9px auto 6px;cursor:pointer;transition:background .15s}
 .bottom-sheet:hover .sheet-handle{background:var(--accent)}
-.tabs{display:flex;border-bottom:.5px solid var(--bd);margin:0 10px}
-.tab{flex:1;height:44px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;border:none;background:transparent;color:var(--stone);transition:color .15s;position:relative}
-.tab.active{color:var(--accent)}
-.tab.active::after{content:'';position:absolute;bottom:0;left:22%;right:22%;height:2px;background:linear-gradient(90deg,var(--accent) 0%,var(--gold) 100%);border-radius:2px}
-.tab-icon{font-size:15px;line-height:1}
-.tab-lbl{font-size:8.5px;letter-spacing:1px;text-transform:uppercase;font-weight:500}
-.panel{overflow-y:auto;height:calc(410px - 44px - 62px);padding:14px 18px 24px;display:none}
+.tabs{display:flex;border-bottom:.5px solid var(--bd);margin:0 8px;padding:2px 0}
+.tab{flex:1;height:56px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer;border:none;background:transparent;color:var(--stone);transition:all .18s;position:relative;border-radius:10px;margin:0 2px}
+.tab:hover{background:var(--cream)}
+.tab.active{color:var(--char);background:linear-gradient(180deg,rgba(201,149,107,.08) 0%,transparent 100%)}
+.tab.active .tab-icon{color:var(--accent);transform:scale(1.1)}
+.tab.active::after{content:'';position:absolute;bottom:-1px;left:24%;right:24%;height:2.5px;background:linear-gradient(90deg,var(--accent) 0%,var(--gold) 100%);border-radius:2px}
+.tab-icon{font-size:20px;line-height:1;transition:transform .2s}
+.tab-lbl{font-size:9.5px;letter-spacing:1.2px;text-transform:uppercase;font-weight:600}
+.panel{overflow-y:auto;height:calc(410px - 56px - 62px);padding:14px 18px 24px;display:none}
 .panel.active{display:block;animation:panelIn .25s ease-out}
 @keyframes panelIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
 .sec-lbl{font-size:9.5px;letter-spacing:2.2px;text-transform:uppercase;color:var(--stone);margin-bottom:10px;font-weight:500}
@@ -178,6 +186,30 @@ html,body{
 .m-btn.primary:active{background:linear-gradient(135deg,var(--accent) 0%,var(--gold) 100%)}
 .m-btn.line-cta{background:#06C755;color:#fff;border-color:#06C755;box-shadow:0 3px 10px rgba(6,199,85,.3);display:flex;align-items:center;justify-content:center;gap:6px}
 .m-btn.line-cta:active{background:#05a648}
+/* TEXT COLOR SWATCHES */
+.color-swatches{display:flex;gap:10px;justify-content:center;padding:6px 0}
+.cswatch{width:44px;height:44px;border-radius:50%;cursor:pointer;border:3px solid transparent;transition:all .2s;position:relative;box-shadow:0 2px 8px rgba(0,0,0,.15);display:flex;align-items:center;justify-content:center}
+.cswatch::after{content:'';position:absolute;inset:-5px;border-radius:50%;border:2px solid transparent;transition:border-color .2s}
+.cswatch.sel::after{border-color:var(--char)}
+.cswatch.sel{transform:scale(1.05)}
+.cswatch.silver{background:linear-gradient(135deg,#E8E8E8 0%,#B0B0B0 50%,#D4D4D4 100%)}
+.cswatch.gold{background:linear-gradient(135deg,#E6C488 0%,#B8864C 50%,#D4AF7A 100%)}
+.cswatch.black{background:linear-gradient(135deg,#2a2826 0%,#1E1C1A 100%)}
+.cswatch-lbl{font-size:9px;color:var(--stone);letter-spacing:1.5px;text-transform:uppercase;font-weight:500;text-align:center;margin-top:6px}
+.cswatch-group{display:flex;flex-direction:column;align-items:center;gap:0}
+/* RESPONSIVE (mobile phones & small tablets) */
+@media (max-width:500px){
+  html,body{background:var(--warm)}
+  .phone{width:100vw;height:100vh;height:100dvh;max-height:100dvh;border-radius:0;box-shadow:none}
+  .notch{display:none}
+  .statusbar{display:none}
+  .topnav{height:54px;padding:0 14px;padding-top:env(safe-area-inset-top,0)}
+  .bottom-sheet{padding-bottom:env(safe-area-inset-bottom,0)}
+  .modal{border-radius:0}
+}
+@media (min-width:501px) and (max-width:900px){
+  .phone{transform:scale(.95);transform-origin:center}
+}
 </style>
 </head>
 <body>
@@ -213,6 +245,12 @@ html,body{
       <div class="pill pill-b">Your Cardigan ✦</div>
     </div>
     <div id="canvas-container"><canvas id="c"></canvas></div>
+    <div class="zoom-ctl" title="ซูม">
+      <button class="zoom-btn" onclick="zoomStep(1)" title="ซูมเข้า">＋</button>
+      <div class="zoom-display" id="zoom-display">100%</div>
+      <button class="zoom-btn" onclick="zoomStep(-1)" title="ซูมออก">－</button>
+      <button class="zoom-btn reset" onclick="zoomReset()" title="รีเซ็ต">⟲</button>
+    </div>
     <div class="color-strip" id="color-strip"></div>
     <div class="toast" id="toast"></div>
   </div>
@@ -233,15 +271,16 @@ html,body{
       <div style="display:flex;flex-direction:column;align-items:center;gap:2px">
         <div class="cb-label">หมุน</div>
         <div style="display:flex;gap:4px;align-items:center">
-          <button class="cb" onclick="rotateObj(-15)">↺</button>
+          <button class="cb" data-rotate="-1">↺</button>
           <div class="rot-display" id="rot-display">0°</div>
-          <button class="cb" onclick="rotateObj(15)">↻</button>
+          <button class="cb" data-rotate="1">↻</button>
         </div>
       </div>
-      <div class="ctrl-divider"></div>
+    </div>
+    <div class="ctrl-row">
       <div style="display:flex;flex-direction:column;align-items:center;gap:2px">
         <div class="cb-label">Layer</div>
-        <div style="display:flex;gap:4px">
+        <div style="display:flex;gap:5px">
           <button class="cb" onclick="bringFront()" title="Bring Front">⬆</button>
           <button class="cb" onclick="sendBack()" title="Send Back">⬇</button>
           <button class="cb" onclick="dupSelected()" title="Duplicate">⧉</button>
@@ -315,24 +354,27 @@ html,body{
 
     <div class="panel" id="panel-text">
       <div class="tpanel">
-        <div><div class="flbl">ข้อความ</div><input class="inp" id="text-input" type="text" placeholder="Your Style..."></div>
-        <div><div class="flbl">Font</div>
-          <select class="sel" id="font-select">
-            <option value="DM Sans">DM Sans — Modern</option>
-            <option value="Playfair Display">Playfair — Elegant</option>
-            <option value="Georgia">Georgia — Classic</option>
-            <option value="Courier New">Courier — Typewriter</option>
-            <option value="Impact">Impact — Bold</option>
-          </select>
-        </div>
-        <div class="row2">
-          <div><div class="flbl">สี</div>
-            <input type="color" id="text-color" value="#1E1C1A" style="width:100%;height:44px;border:.5px solid var(--bd);border-radius:10px;padding:4px;background:var(--cream);cursor:pointer">
+        <div><div class="flbl">ข้อความ</div><input class="inp" id="text-input" type="text" placeholder="Your Style..." maxlength="40"></div>
+        <div>
+          <div class="flbl" style="text-align:center">เลือกสี</div>
+          <div class="color-swatches" id="color-swatches">
+            <div class="cswatch-group">
+              <button type="button" class="cswatch silver" data-color="#B8B8B8" onclick="selectTextColor(this)"></button>
+              <div class="cswatch-lbl">Silver</div>
+            </div>
+            <div class="cswatch-group">
+              <button type="button" class="cswatch gold sel" data-color="#B8864C" onclick="selectTextColor(this)"></button>
+              <div class="cswatch-lbl">Gold</div>
+            </div>
+            <div class="cswatch-group">
+              <button type="button" class="cswatch black" data-color="#1E1C1A" onclick="selectTextColor(this)"></button>
+              <div class="cswatch-lbl">Black</div>
+            </div>
           </div>
-          <div><div class="flbl">ขนาด</div><input class="inp" id="font-size" type="number" value="28" min="8" max="100"></div>
         </div>
-        <div style="font-size:10px;color:var(--stone);letter-spacing:.3px;text-align:center;margin-top:-2px">
-          ราคาคิด <b style="color:var(--gold)">10฿</b> ต่อตัวอักษร
+        <div style="font-size:10.5px;color:var(--stone);letter-spacing:.3px;text-align:center;line-height:1.5">
+          Font: <b style="color:var(--char)">DM Sans 12px</b> (คงที่)<br>
+          ราคา <b style="color:var(--gold)">10฿</b> ต่อตัวอักษร
         </div>
         <button class="add-btn" onclick="addText()">+ เพิ่มข้อความ</button>
       </div>
@@ -392,6 +434,100 @@ function loadShirt(idx,cb){
   },{crossOrigin:'anonymous'});
 }
 loadShirt(0,()=>setTimeout(saveHistory,400));
+
+// ── CANVAS ZOOM & PAN ──
+const MIN_ZOOM=1, MAX_ZOOM=5;
+function getZoom(){ return canvas.getZoom(); }
+function clampViewport(){
+  const z=canvas.getZoom();
+  const vpt=canvas.viewportTransform;
+  if(z<=1.0001){ vpt[4]=0; vpt[5]=0; }
+  else {
+    const maxX=0, minX=CW-CW*z;
+    const maxY=0, minY=CH-CH*z;
+    if(vpt[4]>maxX) vpt[4]=maxX;
+    if(vpt[4]<minX) vpt[4]=minX;
+    if(vpt[5]>maxY) vpt[5]=maxY;
+    if(vpt[5]<minY) vpt[5]=minY;
+  }
+  canvas.setViewportTransform(vpt);
+}
+function setZoomAt(z, point){
+  z=Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, z));
+  const p=point || {x:CW/2, y:CH/2};
+  canvas.zoomToPoint(p, z);
+  clampViewport();
+  canvas.requestRenderAll();
+  updateZoomUI();
+}
+function zoomStep(dir){ setZoomAt(getZoom()*(dir>0?1.3:1/1.3)); }
+function zoomReset(){
+  canvas.setViewportTransform([1,0,0,1,0,0]);
+  canvas.requestRenderAll();
+  updateZoomUI();
+}
+function updateZoomUI(){
+  const el=document.getElementById('zoom-display');
+  if(el) el.textContent=Math.round(getZoom()*100)+'%';
+}
+// mouse wheel zoom
+canvas.on('mouse:wheel', opt=>{
+  const e=opt.e;
+  let z=getZoom()*(0.999**e.deltaY);
+  setZoomAt(z, {x:e.offsetX, y:e.offsetY});
+  e.preventDefault(); e.stopPropagation();
+});
+// pan when zoomed + no object under pointer (alt key หรือ middle mouse ก็ได้)
+let isPanning=false, panLast=null;
+canvas.on('mouse:down', opt=>{
+  const e=opt.e;
+  if(!opt.target && getZoom()>1.01){
+    isPanning=true; panLast={x:e.clientX,y:e.clientY};
+    canvas.selection=false; canvas.defaultCursor='grabbing';
+  }
+});
+canvas.on('mouse:move', opt=>{
+  if(isPanning && panLast){
+    const e=opt.e;
+    const vpt=canvas.viewportTransform;
+    vpt[4]+=e.clientX-panLast.x;
+    vpt[5]+=e.clientY-panLast.y;
+    clampViewport();
+    canvas.requestRenderAll();
+    panLast={x:e.clientX,y:e.clientY};
+  }
+});
+canvas.on('mouse:up', ()=>{ isPanning=false; panLast=null; canvas.selection=true; canvas.defaultCursor='default'; });
+// pinch zoom (2-finger touch)
+(function setupPinch(){
+  const el=canvas.upperCanvasEl;
+  let pinchStartDist=0, pinchStartZoom=1, pinchCenter=null;
+  el.addEventListener('touchstart', e=>{
+    if(e.touches.length===2){
+      const dx=e.touches[0].clientX-e.touches[1].clientX;
+      const dy=e.touches[0].clientY-e.touches[1].clientY;
+      pinchStartDist=Math.hypot(dx,dy);
+      pinchStartZoom=getZoom();
+      const r=el.getBoundingClientRect();
+      pinchCenter={
+        x:(e.touches[0].clientX+e.touches[1].clientX)/2 - r.left,
+        y:(e.touches[0].clientY+e.touches[1].clientY)/2 - r.top
+      };
+    }
+  },{passive:true});
+  el.addEventListener('touchmove', e=>{
+    if(e.touches.length===2 && pinchStartDist){
+      const dx=e.touches[0].clientX-e.touches[1].clientX;
+      const dy=e.touches[0].clientY-e.touches[1].clientY;
+      const dist=Math.hypot(dx,dy);
+      setZoomAt(pinchStartZoom*(dist/pinchStartDist), pinchCenter);
+      e.preventDefault();
+    }
+  },{passive:false});
+  el.addEventListener('touchend', e=>{
+    if(e.touches.length<2){ pinchStartDist=0; pinchCenter=null; }
+  });
+})();
 
 function switchShirt(idx){
   if(idx===currentIdx) return;currentIdx=idx;
@@ -502,13 +638,17 @@ function placePng(id){
 
 function place(obj){canvas.add(obj);canvas.setActiveObject(obj);canvas.renderAll();saveHistory();refreshLayers();closeSheet();}
 
+// ── TEXT: fixed font + size + 3 color swatches ──
+const TEXT_FONT='DM Sans', TEXT_SIZE=12;
+let currentTextColor='#B8864C'; // default gold
+function selectTextColor(el){
+  currentTextColor=el.dataset.color;
+  document.querySelectorAll('.cswatch').forEach(b=>b.classList.toggle('sel', b===el));
+}
 function addText(){
   const str=document.getElementById('text-input').value.trim()||'Casual Look';
-  const font=document.getElementById('font-select').value;
-  const color=document.getElementById('text-color').value;
-  const size=parseInt(document.getElementById('font-size').value)||28;
   place(new fabric.IText(str,{
-    left:CW/2-50,top:CH/2-14,fontSize:size,fontFamily:font,fill:color,
+    left:CW/2-40,top:CH/2-8,fontSize:TEXT_SIZE,fontFamily:TEXT_FONT,fill:currentTextColor,
     selectable:true,id:'obj_'+Date.now(),_label:str.slice(0,16),
     // ── เนียนกับผ้า: shadow เบาๆ คล้ายลายปัก ──
     shadow:new fabric.Shadow({color:'rgba(0,0,0,0.28)',offsetX:0,offsetY:1,blur:1.5})
@@ -525,7 +665,8 @@ function nudge(dx,dy){
 function rotateObj(deg){
   const o=getActive();if(!o)return;
   let a=((o.angle||0)+deg+360)%360;
-  o.set('angle',a);o.setCoords();canvas.renderAll();updateCtrl(o);saveHistory();
+  o.set('angle',a);o.setCoords();canvas.renderAll();updateCtrl(o);
+  // history จะถูก save หลังปล่อยปุ่ม (ใน attachHoldRepeat) เพื่อไม่ spam
 }
 function updateCtrl(o){
   if(!o)return;
@@ -604,28 +745,34 @@ function switchTab(name,el){
   if(!sheetOpen){sheetOpen=true;sheet.classList.add('open');}
 }
 
-// ── NUDGE HOLD-REPEAT ──
+// ── HOLD-REPEAT HELPER (ใช้กับ nudge + rotate) ──
+function attachHoldRepeat(btn, action){
+  let holdTimer=null, repeatTimer=null;
+  const stop=()=>{
+    btn.classList.remove('hold-active');
+    if(holdTimer){clearTimeout(holdTimer);holdTimer=null;}
+    if(repeatTimer){clearInterval(repeatTimer);repeatTimer=null;}
+    if(getActive()) saveHistory();
+  };
+  const start=(e)=>{
+    e.preventDefault();
+    btn.classList.add('hold-active');
+    action();
+    holdTimer=setTimeout(()=>{ repeatTimer=setInterval(action, 28); }, 280);
+  };
+  btn.addEventListener('pointerdown',start);
+  btn.addEventListener('pointerup',stop);
+  btn.addEventListener('pointerleave',stop);
+  btn.addEventListener('pointercancel',stop);
+}
 (function(){
   document.querySelectorAll('.cb[data-nudge]').forEach(btn=>{
     const [dx,dy]=btn.dataset.nudge.split(',').map(Number);
-    let holdTimer=null, repeatTimer=null;
-    const stop=()=>{
-      btn.classList.remove('hold-active');
-      if(holdTimer){clearTimeout(holdTimer);holdTimer=null;}
-      if(repeatTimer){clearInterval(repeatTimer);repeatTimer=null;}
-      // บันทึก history หลังปล่อยปุ่ม (ไม่ spam ตอนกดค้าง)
-      if(getActive()) saveHistory();
-    };
-    const start=(e)=>{
-      e.preventDefault();
-      btn.classList.add('hold-active');
-      nudge(dx,dy);
-      holdTimer=setTimeout(()=>{ repeatTimer=setInterval(()=>nudge(dx,dy), 28); }, 280);
-    };
-    btn.addEventListener('pointerdown',start);
-    btn.addEventListener('pointerup',stop);
-    btn.addEventListener('pointerleave',stop);
-    btn.addEventListener('pointercancel',stop);
+    attachHoldRepeat(btn, ()=>nudge(dx,dy));
+  });
+  document.querySelectorAll('.cb[data-rotate]').forEach(btn=>{
+    const deg=parseFloat(btn.dataset.rotate);
+    attachHoldRepeat(btn, ()=>rotateObj(deg));
   });
 })();
 
