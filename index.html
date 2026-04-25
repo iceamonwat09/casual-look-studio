@@ -502,7 +502,18 @@ const PRICE_SHIRT=250, PRICE_S=25, PRICE_M=40, PRICE_L=50, PRICE_TEXT_PER_CHAR=1
 const SIZE_RATIO={small:0.08, medium:0.09, large:0.11};
 const LINE_ID='@863tjnsq';
 const LINE_ADD_URL='https://line.me/R/ti/p/'+encodeURIComponent(LINE_ID);
-const canvas=new fabric.Canvas('c',{width:CW,height:CH,backgroundColor:'#FDFBF8',preserveObjectStacking:true});
+const canvas=new fabric.Canvas('c',{
+  width:CW,height:CH,backgroundColor:'#FDFBF8',
+  preserveObjectStacking:true,
+  // 🔑 FIX: ปิด offscreen-culling ของ fabric — แก้บั๊ก "ภาพหายตอน zoom + tap"
+  // กลไก isOnScreen() ของ fabric 5.x คำนวณผิดเมื่อมี viewportTransform
+  // active → ตัด object ออกจาก render ทั้งที่ยังอยู่ใน canvas
+  skipOffscreen:false,
+  enableRetinaScaling:true,
+  imageSmoothingEnabled:true,
+  fireRightClick:false,
+  stopContextMenu:true
+});
 let cardiganObj=null,currentIdx=0;
 
 function loadShirt(idx,cb){
