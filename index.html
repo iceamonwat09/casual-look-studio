@@ -6,17 +6,14 @@
 <title>Casual Look — Studio</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
-<!-- ══════════════════════════════════════════════════════════════════
-  GOOGLE ANALYTICS 4 (ใส่ Measurement ID ของคุณแทน G-XXXXXXXXXX
-  แล้วลบเครื่องหมาย comment ออก — ดูวิธีสมัครที่ analytics.google.com)
+<!-- Google tag (gtag.js) — Casual Look Studio -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-T48HC6NLL6"></script>
 <script>
-  window.dataLayer=window.dataLayer||[];
+  window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
-  gtag('js',new Date());
-  gtag('config','G-T48HC6NLL6');
+  gtag('js', new Date());
+  gtag('config', 'G-T48HC6NLL6');
 </script>
-═══════════════════════════════════════════════════════════════════ -->
 <style>
 :root{
   --cream:#F8F5F0;--warm:#FDFBF8;--stone:#9A8F85;
@@ -562,27 +559,48 @@ canvas.on('mouse:wheel', opt=>{
   setZoomAt(z, {x:e.offsetX, y:e.offsetY});
   e.preventDefault(); e.stopPropagation();
 });
-// pan when zoomed + no object under pointer (alt key หรือ middle mouse ก็ได้)
-let isPanning=false, panLast=null;
+// pan when zoomed + ลากบนพื้นที่ว่าง — มี dead-zone 5px กันแตะแล้วเลื่อนโดยไม่ตั้งใจ
+let isPanning=false, panStart=null;
+const PAN_DEADZONE=5;
 canvas.on('mouse:down', opt=>{
   const e=opt.e;
-  if(!opt.target && getZoom()>1.01){
-    isPanning=true; panLast={x:e.clientX,y:e.clientY};
-    canvas.selection=false; canvas.defaultCursor='grabbing';
+  if(getZoom()>1.01 && !opt.target){
+    panStart={x:e.clientX, y:e.clientY, vpt:[...canvas.viewportTransform]};
+  }else{
+    panStart=null;
   }
 });
 canvas.on('mouse:move', opt=>{
-  if(isPanning && panLast){
-    const e=opt.e;
-    const vpt=canvas.viewportTransform;
-    vpt[4]+=e.clientX-panLast.x;
-    vpt[5]+=e.clientY-panLast.y;
-    clampViewport();
-    canvas.requestRenderAll();
-    panLast={x:e.clientX,y:e.clientY};
-  }
+  if(!panStart) return;
+  const e=opt.e;
+  const dx=e.clientX-panStart.x, dy=e.clientY-panStart.y;
+  if(!isPanning && Math.hypot(dx,dy)<PAN_DEADZONE) return;
+  if(!isPanning){ isPanning=true; canvas.selection=false; canvas.defaultCursor='grabbing'; }
+  const vpt=canvas.viewportTransform;
+  vpt[4]=panStart.vpt[4]+dx;
+  vpt[5]=panStart.vpt[5]+dy;
+  clampViewport();
+  canvas.requestRenderAll();
 });
-canvas.on('mouse:up', ()=>{ isPanning=false; panLast=null; canvas.selection=true; canvas.defaultCursor='default'; });
+canvas.on('mouse:up', ()=>{
+  if(isPanning){ canvas.selection=true; canvas.defaultCursor='default'; }
+  isPanning=false; panStart=null;
+});
+// บังคับ re-render หลัง select เพื่อกัน object หายเพราะ render glitch
+canvas.on('selection:created', ()=>canvas.requestRenderAll());
+canvas.on('selection:updated', ()=>canvas.requestRenderAll());
+// double-tap canvas ที่ว่าง = reset zoom (ทางออกเร็วถ้าหลงทาง)
+let lastTap=0;
+canvas.upperCanvasEl.addEventListener('pointerdown', e=>{
+  const now=Date.now();
+  if(now-lastTap<350 && getZoom()>1.01){
+    // ตรวจว่าไม่ได้แตะบน object
+    const p=canvas.getPointer(e);
+    const hit=canvas.getObjects().some(o=>o!==cardiganObj && o.containsPoint && o.containsPoint(p));
+    if(!hit){ zoomReset(); showToast('ซูม 100%'); }
+  }
+  lastTap=now;
+});
 // pinch zoom (2-finger touch)
 (function setupPinch(){
   const el=canvas.upperCanvasEl;
