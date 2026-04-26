@@ -526,11 +526,10 @@ const CW=360,CH=400;
 // ── PRICING CONFIG ──
 const PRICE_SHIRT=250, PRICE_S=25, PRICE_M=40, PRICE_L=50, PRICE_TEXT_PER_CHAR=10;
 const SIZE_RATIO={small:0.08, medium:0.09, large:0.11};
-// ⚠️ ต้องแก้ทั้ง 2 ค่านี้ก่อนใช้งาน production:
-//   1. LINE_ID         = LINE OA bot basic ID ของ account ใหม่ (ขึ้นต้นด้วย @)
-//   2. WORKER_URL      = URL ที่ได้จาก wrangler deploy (ดู worker/README.md)
-const LINE_ID='@YOUR_NEW_LINE_OA_ID';
-const LINE_ADD_URL='https://line.me/R/ti/p/'+encodeURIComponent(LINE_ID);
+// ⚙ Config — แก้เฉพาะ LINE_ID เมื่อมี Bot basic ID จริง (เริ่มต้นด้วย @)
+//   ถ้ายังไม่มี — ปล่อยเป็นค่าว่าง ปุ่ม "แชทกับร้าน" จะถูกซ่อนอัตโนมัติ
+const LINE_ID='';                                                          // เช่น '@abc1234'
+const LINE_ADD_URL=LINE_ID?('https://line.me/R/ti/p/'+encodeURIComponent(LINE_ID)):'';
 const WORKER_URL='https://casuallook-bot.iceamonwat.workers.dev';
 const canvas=new fabric.Canvas('c',{
   width:CW,height:CH,backgroundColor:'#FDFBF8',
@@ -1159,7 +1158,12 @@ function openLineModalAfterSave(){
 }
 
 function openLineApp(){
+  if(!LINE_ADD_URL){ showToast('ยังไม่ได้ตั้ง LINE Bot ID'); return; }
   window.open(LINE_ADD_URL, '_blank');
+}
+// ซ่อนปุ่มแชท LINE ทั้งหมดถ้ายังไม่ได้ตั้ง LINE_ID
+if(!LINE_ID){
+  document.querySelectorAll('.m-btn.line-cta').forEach(b=>b.style.display='none');
 }
 
 function showToast(msg){
