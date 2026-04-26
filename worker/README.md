@@ -37,20 +37,39 @@ Backend serverless function ที่:
 6. ที่ tab **Basic settings**:
    - หา **Bot basic ID** (เช่น `@1234abcd`) → นี่คือ ID ที่ลูกค้าใช้ Add Friend
 
-### Step 2 — หา Admin User ID
+### Step 2 — หา Push Target ID (User หรือ Group)
 
-User ID ของแอดมินคือ userId ของบัญชี LINE ที่จะรับ notify ออเดอร์
+`LINE_ADMIN_USER_ID` คือ ID ที่ Worker จะ push ออเดอร์ไป — รองรับทั้ง 3 รูปแบบ:
 
-**วิธีหา (เลือกวิธีใดก็ได้):**
+| Type | ขึ้นต้นด้วย | ใช้เมื่อ |
+|---|---|---|
+| `userId` | `U` | ส่งหาแอดมินคนเดียว (1-on-1 chat) |
+| `groupId` | `C` | ส่งเข้า**กลุ่ม**ทีมงาน (แนะนำ) |
+| `roomId` | `R` | ส่งเข้า multi-person chat (ไม่มีชื่อกลุ่ม) |
 
-**วิธีที่ 1 — ผ่าน LINE Developers Console (ง่ายสุด):**
-- ที่หน้า Channel → tab **Basic settings** → เลื่อนลงหา **Your user ID**
-- คัดลอกค่า (ขึ้นต้นด้วย `U` ตามด้วย 32 ตัวอักษร เช่น `Uabc123...`)
+**วิธีหา groupId (แนะนำสำหรับร้าน):**
+1. สร้างกลุ่ม LINE ทีมงาน → invite **bot OA** เข้ากลุ่ม
+2. ส่งข้อความอะไรก็ได้ในกลุ่ม
+3. เปิด Webhook ใน LINE Developers Console (Messaging API tab → Webhook URL → ตั้งให้ verify)
+   - หรือใช้ webhook tester เช่น https://webhook.site
+4. จะเห็น JSON event ลักษณะ:
+   ```json
+   {
+     "events": [{
+       "source": {
+         "type": "group",
+         "groupId": "Cxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+         ...
+       }
+     }]
+   }
+   ```
+5. คัดลอกค่า `groupId` (ขึ้นต้นด้วย `C` ตามด้วย 32 ตัวอักษร)
 
-**วิธีที่ 2 — Add bot เป็นเพื่อน + ส่งข้อความ:**
-- Scan QR code ของ bot → Add Friend
-- ส่งข้อความอะไรก็ได้
-- ดู Webhook event log ใน Console → จะเห็น `userId`
+**วิธีหา userId (สำหรับส่งหาคนเดียว):**
+- ที่หน้า Channel → tab **Basic settings** → เลื่อนลงหา **Your user ID** (ขึ้นต้นด้วย `U`)
+
+**สำคัญ:** Bot ต้อง**อยู่ในกลุ่ม / เป็นเพื่อน**กับ target ID ก่อน ไม่งั้น push จะ fail (403)
 
 ### Step 3 — สมัคร ImgBB API Key
 

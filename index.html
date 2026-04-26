@@ -531,7 +531,7 @@ const SIZE_RATIO={small:0.08, medium:0.09, large:0.11};
 //   2. WORKER_URL      = URL ที่ได้จาก wrangler deploy (ดู worker/README.md)
 const LINE_ID='@YOUR_NEW_LINE_OA_ID';
 const LINE_ADD_URL='https://line.me/R/ti/p/'+encodeURIComponent(LINE_ID);
-const WORKER_URL='https://casual-look-line.YOUR-SUBDOMAIN.workers.dev';
+const WORKER_URL='https://casuallook-bot.iceamonwat.workers.dev';
 const canvas=new fabric.Canvas('c',{
   width:CW,height:CH,backgroundColor:'#FDFBF8',
   preserveObjectStacking:true,
@@ -1009,7 +1009,7 @@ async function sendOrderToLineAndPay(p, imageDataUrl){
   openModal('pay-modal');
 
   // ตรวจว่า WORKER_URL ตั้งแล้วหรือยัง
-  if(WORKER_URL.includes('YOUR-SUBDOMAIN')){
+  if(WORKER_URL.includes('YOUR-SUBDOMAIN') || !WORKER_URL){
     document.getElementById('pay-status').innerHTML='⚠ Worker ยังไม่ได้ตั้งค่า<br><span style="font-size:10px">เปิด index.html แก้ค่า WORKER_URL ก่อน — ดู worker/README.md</span>';
     document.getElementById('pay-status').style.color='#c0392b';
     document.getElementById('pay-actions').style.display='flex';
