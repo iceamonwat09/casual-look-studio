@@ -6,6 +6,7 @@
 <title>Casual Look — Studio</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
 <!-- Google tag (gtag.js) — Casual Look Studio -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-T48HC6NLL6"></script>
 <script>
@@ -351,6 +352,31 @@ html,body{
     </div>
   </div>
 
+  <!-- PAYMENT QR MODAL -->
+  <div id="pay-modal" class="modal">
+    <div class="modal-card">
+      <button class="modal-close" onclick="closeModal('pay-modal')">✕</button>
+      <div class="modal-title">ชำระเงิน · PromptPay</div>
+      <div class="modal-sub" id="pay-order-id">Order · —</div>
+      <div id="pay-status" style="font-size:11px;color:var(--stone);margin-bottom:10px;letter-spacing:.3px;line-height:1.5">กำลังส่งออเดอร์ไปยังร้าน...</div>
+      <div id="pay-qr-wrap" style="background:#fff;padding:14px;border-radius:14px;border:.5px solid var(--bd);display:none;margin:0 auto;width:fit-content;box-shadow:var(--shadow-sm)">
+        <canvas id="pay-qr"></canvas>
+      </div>
+      <div id="pay-amount" style="font-family:'Playfair Display',serif;font-size:24px;color:var(--gold);margin-top:12px;display:none">฿—</div>
+      <div id="pay-info" style="font-size:10.5px;color:var(--stone);line-height:1.6;margin-top:8px;display:none">
+        สแกน QR ด้วย Mobile Banking<br>
+        ของธนาคารใดก็ได้ (PromptPay)
+      </div>
+      <div class="modal-actions" id="pay-actions" style="display:none">
+        <button class="m-btn line-cta" onclick="openLineApp()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.03 2 11c0 3.05 1.6 5.75 4.1 7.46V22l3.8-2.1c.67.19 1.38.1 2.1.1 5.52 0 10-4.03 10-9S17.52 2 12 2z"/></svg>
+          แชทกับร้าน
+        </button>
+        <button class="m-btn primary" onclick="closeModal('pay-modal')">เสร็จสิ้น</button>
+      </div>
+    </div>
+  </div>
+
   <!-- BOTTOM SHEET -->
   <div class="bottom-sheet" id="bottom-sheet">
     <div class="sheet-handle" onclick="toggleSheet()"></div>
@@ -500,8 +526,12 @@ const CW=360,CH=400;
 // ── PRICING CONFIG ──
 const PRICE_SHIRT=250, PRICE_S=25, PRICE_M=40, PRICE_L=50, PRICE_TEXT_PER_CHAR=10;
 const SIZE_RATIO={small:0.08, medium:0.09, large:0.11};
-const LINE_ID='@863tjnsq';
+// ⚠️ ต้องแก้ทั้ง 2 ค่านี้ก่อนใช้งาน production:
+//   1. LINE_ID         = LINE OA bot basic ID ของ account ใหม่ (ขึ้นต้นด้วย @)
+//   2. WORKER_URL      = URL ที่ได้จาก wrangler deploy (ดู worker/README.md)
+const LINE_ID='@YOUR_NEW_LINE_OA_ID';
 const LINE_ADD_URL='https://line.me/R/ti/p/'+encodeURIComponent(LINE_ID);
+const WORKER_URL='https://casual-look-line.YOUR-SUBDOMAIN.workers.dev';
 const canvas=new fabric.Canvas('c',{
   width:CW,height:CH,backgroundColor:'#FDFBF8',
   preserveObjectStacking:true,
@@ -953,17 +983,88 @@ function onClickSave(){
 function confirmSave(){
   closeModal('confirm-modal');
   const p=calculatePrice();
-  exportWithPriceFooter(p).then(()=>{
+  exportWithPriceFooter(p).then(imageDataUrl=>{
     // copy รายละเอียดไปคลิปบอร์ด
     const text=buildOrderText(p);
     try{ navigator.clipboard && navigator.clipboard.writeText(text); }catch(e){}
-    // track analytics (ไม่ block flow ถ้า network ช้า/ล่ม)
+    // track analytics
     trackSave(p);
-    // เปิด LINE modal แจ้ง Add Line
-    openLineModalAfterSave();
+    // ส่งออเดอร์ไป LINE OA + เปิด payment modal พร้อม QR
+    sendOrderToLineAndPay(p, imageDataUrl);
   }).catch(err=>{
     console.error('Save flow failed:',err);
   });
+}
+
+// ── ส่งออเดอร์ไป Worker + แสดง PromptPay QR ──
+async function sendOrderToLineAndPay(p, imageDataUrl){
+  // เปิด modal ทันที โชว์ loading
+  document.getElementById('pay-order-id').textContent='Order · '+__lastOrderNo;
+  document.getElementById('pay-status').textContent='กำลังส่งออเดอร์ไปยังร้าน...';
+  document.getElementById('pay-status').style.color='var(--stone)';
+  document.getElementById('pay-qr-wrap').style.display='none';
+  document.getElementById('pay-amount').style.display='none';
+  document.getElementById('pay-info').style.display='none';
+  document.getElementById('pay-actions').style.display='none';
+  openModal('pay-modal');
+
+  // ตรวจว่า WORKER_URL ตั้งแล้วหรือยัง
+  if(WORKER_URL.includes('YOUR-SUBDOMAIN')){
+    document.getElementById('pay-status').innerHTML='⚠ Worker ยังไม่ได้ตั้งค่า<br><span style="font-size:10px">เปิด index.html แก้ค่า WORKER_URL ก่อน — ดู worker/README.md</span>';
+    document.getElementById('pay-status').style.color='#c0392b';
+    document.getElementById('pay-actions').style.display='flex';
+    openLineModalAfterSave_silent();
+    return;
+  }
+
+  try{
+    const resp=await fetch(WORKER_URL+'/order',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        imageBase64:imageDataUrl,
+        order:{
+          id:__lastOrderNo,
+          shirt:p.shirt, s:p.s, m:p.m, l:p.l,
+          subS:p.subS, subM:p.subM, subL:p.subL,
+          chars:p.chars, subT:p.subT,
+          total:p.total
+        }
+      })
+    });
+    const data=await resp.json();
+    if(!resp.ok || !data.success) throw new Error(data.message||data.error||'unknown');
+
+    // success — render QR + showรายละเอียด
+    document.getElementById('pay-status').innerHTML='✓ ส่งออเดอร์ให้ร้านแล้ว<br><span style="font-size:10px">สแกน QR เพื่อชำระเงิน</span>';
+    document.getElementById('pay-status').style.color='var(--gold)';
+    document.getElementById('pay-amount').textContent='฿'+p.total.toLocaleString();
+    document.getElementById('pay-amount').style.display='block';
+    document.getElementById('pay-info').style.display='block';
+    document.getElementById('pay-actions').style.display='flex';
+    document.getElementById('pay-qr-wrap').style.display='block';
+
+    // วาด QR ลง canvas
+    const qcv=document.getElementById('pay-qr');
+    if(typeof QRCode!=='undefined'){
+      QRCode.toCanvas(qcv,data.promptpay,{
+        width:200, margin:1,
+        color:{dark:'#1E1C1A',light:'#FDFBF8'}
+      }, err=>{ if(err) console.error('QR render fail',err); });
+    }
+  }catch(err){
+    console.error('sendOrder fail:',err);
+    document.getElementById('pay-status').innerHTML='⚠ ส่งออเดอร์ไม่สำเร็จ<br><span style="font-size:10px">'+(err.message||err)+'</span><br>รบกวนติดต่อร้านโดยตรงทาง LINE';
+    document.getElementById('pay-status').style.color='#c0392b';
+    document.getElementById('pay-actions').style.display='flex';
+  }
+}
+
+function openLineModalAfterSave_silent(){
+  // ไม่เปิด modal — แค่อัพเดทข้อความเฉยๆ (ใช้ตอน worker ยังไม่พร้อม)
+  document.getElementById('line-modal-title').textContent='บันทึกสำเร็จ ✓';
+  document.getElementById('line-modal-sub').textContent='กรุณา Add LINE เพื่อส่งรูป';
+  document.getElementById('line-modal-hint').style.display='block';
 }
 
 function buildOrderText(p){
@@ -1018,20 +1119,22 @@ function exportWithPriceFooter(p){
         ctx.font='400 '+(20*mult)+'px "Playfair Display", Georgia, serif';
         ctx.fillText('Total  ฿'+p.total.toLocaleString(), cx, fy+Math.round(40*mult));
         const filename='casual-look-'+__lastOrderNo+'.png';
+        // เก็บ dataUrl ไว้ resolve กลับให้ caller (ใช้ส่งเข้า Worker)
+        const finalDataUrl=off.toDataURL('image/png');
         if(off.toBlob){
           off.toBlob(blob=>{
             if(!blob){ // fallback
-              triggerDownload(off.toDataURL('image/png'), filename);
+              triggerDownload(finalDataUrl, filename);
             }else{
               const url=URL.createObjectURL(blob);
               triggerDownload(url, filename);
               setTimeout(()=>URL.revokeObjectURL(url),2000);
             }
-            resolve();
+            resolve(finalDataUrl);
           },'image/png');
         }else{
-          triggerDownload(off.toDataURL('image/png'), filename);
-          resolve();
+          triggerDownload(finalDataUrl, filename);
+          resolve(finalDataUrl);
         }
       }catch(err){
         console.error('Draw/download failed:',err);
