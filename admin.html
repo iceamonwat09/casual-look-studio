@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Admin · Casual Look</title>
+<meta name="robots" content="noindex,nofollow">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --cream:#F8F5F0;--warm:#FDFBF8;--stone:#9A8F85;
+  --char:#1E1C1A;--accent:#C9956B;--alight:#F0E3D6;
+  --gold:#B8864C;--bd:rgba(30,28,26,0.09);--bd-strong:rgba(30,28,26,0.16);
+  --shadow-sm:0 1px 3px rgba(30,28,26,.06);
+  --shadow-md:0 6px 18px rgba(30,28,26,.09);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{
+  min-height:100vh;background:#1E1C1A;
+  color:var(--char);font-family:'DM Sans',sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+.app{min-height:100vh;background:linear-gradient(180deg,#F3EEE7 0%,var(--cream) 100%);max-width:1400px;margin:0 auto;box-shadow:0 0 60px rgba(0,0,0,.4)}
+/* Login screen */
+.login-bg{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#1E1C1A 0%,#3a3633 100%);padding:20px}
+.login-card{background:var(--warm);border-radius:18px;padding:40px 32px;width:100%;max-width:380px;box-shadow:0 20px 60px rgba(0,0,0,.4);text-align:center}
+.login-card h1{font-family:'Playfair Display',serif;font-size:28px;color:var(--char);font-weight:400;letter-spacing:1px}
+.login-card .sub{font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--accent);margin-top:6px;font-weight:500;margin-bottom:30px}
+.login-card input{width:100%;height:48px;border:.5px solid var(--bd);border-radius:11px;padding:0 16px;font-size:15px;background:var(--cream);font-family:'DM Sans',sans-serif;letter-spacing:.5px}
+.login-card input:focus{outline:none;border-color:var(--accent);background:var(--warm);box-shadow:0 0 0 3px rgba(201,149,107,.12)}
+.login-card button{width:100%;height:48px;background:linear-gradient(135deg,var(--char) 0%,#2a2826 100%);color:var(--warm);border:none;border-radius:11px;font-size:12px;letter-spacing:2px;text-transform:uppercase;cursor:pointer;font-weight:500;margin-top:12px;box-shadow:0 4px 14px rgba(30,28,26,.25)}
+.login-card button:active{transform:scale(.98)}
+.login-card .err{color:#c0392b;font-size:12px;margin-top:10px;display:none;letter-spacing:.3px}
+/* Topbar */
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:16px 24px;background:var(--warm);border-bottom:.5px solid var(--bd);position:sticky;top:0;z-index:10;backdrop-filter:blur(8px)}
+.brand{display:flex;flex-direction:column}
+.brand-name{font-family:'Playfair Display',serif;font-size:22px;color:var(--char);letter-spacing:1px;line-height:1}
+.brand-sub{font-size:8.5px;letter-spacing:3px;text-transform:uppercase;color:var(--accent);font-weight:500;margin-top:3px}
+.topbar-right{display:flex;align-items:center;gap:10px}
+.refresh-btn,.logout-btn{height:36px;padding:0 14px;border:.5px solid var(--bd);border-radius:9px;background:var(--cream);color:var(--char);font-size:11px;letter-spacing:1.2px;text-transform:uppercase;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;display:flex;align-items:center;gap:6px}
+.refresh-btn:active,.logout-btn:active{transform:scale(.96);background:var(--alight)}
+.logout-btn{background:transparent;color:var(--stone)}
+/* Filter chips */
+.filters{display:flex;gap:6px;padding:14px 24px;background:var(--warm);border-bottom:.5px solid var(--bd);overflow-x:auto;scrollbar-width:none}
+.filters::-webkit-scrollbar{display:none}
+.chip{flex-shrink:0;height:34px;padding:0 14px;border-radius:18px;border:.5px solid var(--bd);background:var(--cream);color:var(--char);font-size:11.5px;letter-spacing:1px;text-transform:uppercase;cursor:pointer;font-weight:500;display:flex;align-items:center;gap:6px;font-family:'DM Sans',sans-serif}
+.chip:active{transform:scale(.95)}
+.chip.active{background:var(--char);color:var(--warm);border-color:var(--char)}
+.chip .cnt{background:rgba(255,255,255,.18);padding:1px 7px;border-radius:10px;font-size:10px;font-weight:600}
+.chip:not(.active) .cnt{background:var(--alight);color:var(--accent)}
+/* Stats */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;padding:18px 24px;background:linear-gradient(180deg,var(--warm) 0%,transparent 100%)}
+.stat{background:var(--warm);border:.5px solid var(--bd);border-radius:13px;padding:14px 16px;box-shadow:var(--shadow-sm)}
+.stat .lbl{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--stone);font-weight:500}
+.stat .val{font-family:'Playfair Display',serif;font-size:24px;color:var(--char);margin-top:5px;letter-spacing:.3px}
+.stat .val small{font-size:13px;color:var(--stone);margin-left:3px;font-family:'DM Sans',sans-serif;font-weight:400}
+/* Order list */
+.list-wrap{padding:6px 24px 30px}
+.list-empty{text-align:center;padding:60px 20px;color:var(--stone);font-style:italic}
+.order-row{background:var(--warm);border:.5px solid var(--bd);border-radius:14px;padding:16px;margin-bottom:10px;cursor:pointer;transition:all .18s;box-shadow:var(--shadow-sm)}
+.order-row:hover{border-color:var(--accent);transform:translateY(-1px);box-shadow:var(--shadow-md)}
+.order-row.expanded{border-color:var(--gold);box-shadow:0 0 0 2px rgba(184,134,76,.15),var(--shadow-md)}
+.order-head{display:grid;grid-template-columns:auto 1fr auto auto;gap:14px;align-items:center}
+.thumb{width:64px;height:64px;border-radius:11px;background:var(--cream);overflow:hidden;flex-shrink:0;border:.5px solid var(--bd)}
+.thumb img{width:100%;height:100%;object-fit:contain}
+.row-info .o-id{font-family:'DM Sans',sans-serif;font-size:11px;color:var(--gold);font-weight:600;letter-spacing:1.2px}
+.row-info .o-name{font-size:14px;color:var(--char);margin-top:3px;font-weight:500}
+.row-info .o-meta{font-size:11px;color:var(--stone);margin-top:3px;letter-spacing:.3px}
+.row-amt{font-family:'Playfair Display',serif;font-size:20px;color:var(--gold);font-weight:500;text-align:right}
+.row-amt small{font-size:10px;color:var(--stone);display:block;font-family:'DM Sans',sans-serif;letter-spacing:1.5px;text-transform:uppercase;margin-top:2px;font-weight:500}
+.row-status{display:inline-flex;align-items:center;gap:6px;font-size:11px;padding:5px 11px;border-radius:14px;letter-spacing:.5px;font-weight:500;white-space:nowrap}
+.row-status .dot{width:8px;height:8px;border-radius:50%}
+.s-pending{background:#FEF1E0;color:#B8772D}.s-pending .dot{background:#F2A33C}
+.s-production{background:#E5EFFE;color:#3D6FCF}.s-production .dot{background:#5B8DEF}
+.s-shipping{background:#F2E8F8;color:#7B448E}.s-shipping .dot{background:#9b59b6}
+.s-delivered{background:#E0F5E5;color:#1F8540}.s-delivered .dot{background:#27ae60}
+/* Expanded panel */
+.expand-body{display:none;margin-top:14px;padding-top:14px;border-top:.5px dashed var(--bd)}
+.order-row.expanded .expand-body{display:block;animation:slideDown .25s ease-out}
+@keyframes slideDown{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
+.exp-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:16px}
+.exp-section{}
+.exp-title{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--stone);font-weight:500;margin-bottom:8px}
+.exp-img{width:100%;border-radius:11px;border:.5px solid var(--bd);background:var(--cream)}
+.info-line{font-size:13px;line-height:1.6;color:var(--char);padding:4px 0}
+.info-line .k{color:var(--stone);display:inline-block;min-width:70px;font-size:11px;letter-spacing:.5px;text-transform:uppercase;font-weight:500}
+.copy-btn{display:inline-flex;align-items:center;gap:4px;background:none;border:.5px solid var(--bd);border-radius:7px;padding:2px 8px;font-size:10px;color:var(--stone);cursor:pointer;margin-left:6px;font-family:'DM Sans',sans-serif}
+.copy-btn:active{background:var(--alight);color:var(--char)}
+.bill-mini{font-size:12.5px;line-height:1.7}
+.bill-mini .row{display:flex;justify-content:space-between;border-bottom:.5px dashed var(--bd);padding:4px 0}
+.bill-mini .total{display:flex;justify-content:space-between;border-top:1px solid var(--char);padding-top:8px;margin-top:6px;font-weight:500}
+.bill-mini .total b{color:var(--gold);font-family:'Playfair Display',serif;font-size:18px;font-weight:500}
+/* Action buttons */
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+.action{height:38px;padding:0 14px;border:.5px solid var(--bd);border-radius:9px;background:var(--cream);color:var(--char);font-size:11px;letter-spacing:1.2px;text-transform:uppercase;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;display:flex;align-items:center;gap:5px}
+.action:active{transform:scale(.97)}
+.action.primary{background:var(--char);color:var(--warm);border-color:var(--char)}
+.action.primary:active{background:var(--accent)}
+.action.go-pending{border-color:#F2A33C;color:#B8772D}
+.action.go-production{border-color:#5B8DEF;color:#3D6FCF}
+.action.go-shipping{border-color:#9b59b6;color:#7B448E}
+.action.go-delivered{border-color:#27ae60;color:#1F8540}
+.action.danger{background:#fdecec;color:#c0392b;border-color:#f5c6c6}
+/* Responsive */
+@media (max-width:880px){
+  .stats{grid-template-columns:repeat(2,1fr)}
+  .exp-grid{grid-template-columns:1fr}
+}
+@media (max-width:640px){
+  .topbar{padding:14px 16px}
+  .filters{padding:12px 16px}
+  .stats{padding:14px 16px;gap:8px}
+  .stat{padding:12px}
+  .stat .val{font-size:20px}
+  .list-wrap{padding:6px 16px 24px}
+  .order-row{padding:14px}
+  .order-head{grid-template-columns:auto 1fr;gap:12px}
+  .row-amt-col{grid-column:1/-1;display:flex;justify-content:space-between;align-items:center;padding-top:10px;border-top:.5px dashed var(--bd);margin-top:10px}
+  .thumb{width:54px;height:54px}
+  .brand-name{font-size:18px}
+  .refresh-btn span,.logout-btn span{display:none}
+}
+</style>
+</head>
+<body>
+<!-- LOGIN -->
+<div id="login" class="login-bg">
+  <div class="login-card">
+    <h1>Casual Look</h1>
+    <div class="sub">Admin Console</div>
+    <input id="pwd" type="password" placeholder="Admin Password" autofocus onkeydown="if(event.key==='Enter')doLogin()">
+    <button onclick="doLogin()">เข้าสู่ระบบ</button>
+    <div class="err" id="login-err">รหัสผ่านไม่ถูกต้อง</div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app" class="app" style="display:none">
+  <div class="topbar">
+    <div class="brand">
+      <span class="brand-name">Casual Look</span>
+      <span class="brand-sub">Admin Dashboard</span>
+    </div>
+    <div class="topbar-right">
+      <button class="refresh-btn" onclick="loadOrders()">↻ <span>Refresh</span></button>
+      <button class="logout-btn" onclick="logout()">⏻ <span>Logout</span></button>
+    </div>
+  </div>
+
+  <div class="filters" id="filters">
+    <button class="chip active" data-status="" onclick="setFilter('',this)">ทั้งหมด <span class="cnt" id="cnt-all">0</span></button>
+    <button class="chip" data-status="pending" onclick="setFilter('pending',this)">🟡 รอชำระ <span class="cnt" id="cnt-pending">0</span></button>
+    <button class="chip" data-status="production" onclick="setFilter('production',this)">🔵 ผลิต <span class="cnt" id="cnt-production">0</span></button>
+    <button class="chip" data-status="shipping" onclick="setFilter('shipping',this)">🟣 จัดส่ง <span class="cnt" id="cnt-shipping">0</span></button>
+    <button class="chip" data-status="delivered" onclick="setFilter('delivered',this)">🟢 เสร็จสิ้น <span class="cnt" id="cnt-delivered">0</span></button>
+  </div>
+
+  <div class="stats">
+    <div class="stat"><div class="lbl">ออเดอร์ทั้งหมด</div><div class="val" id="s-total">0</div></div>
+    <div class="stat"><div class="lbl">รอชำระเงิน</div><div class="val" id="s-pending">0</div></div>
+    <div class="stat"><div class="lbl">ยอดขายวันนี้</div><div class="val" id="s-today">฿0</div></div>
+    <div class="stat"><div class="lbl">ยอดรวม</div><div class="val" id="s-grand">฿0</div></div>
+  </div>
+
+  <div class="list-wrap" id="list">
+    <div class="list-empty">กำลังโหลด...</div>
+  </div>
+</div>
+
+<script>
+const WORKER_URL='https://casuallook-bot.iceamonwat.workers.dev';
+const STATUS_LABELS={pending:'รอชำระเงิน',production:'ระหว่างการผลิต',shipping:'จัดส่ง',delivered:'ได้รับสินค้า'};
+const SESSION_KEY='cl_admin_pwd';
+
+let allOrders=[];
+let currentFilter='';
+let expandedId=null;
+
+async function doLogin(){
+  const pwd=document.getElementById('pwd').value;
+  if(!pwd) return;
+  try{
+    const r=await fetch(WORKER_URL+'/admin/login',{
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({password:pwd})
+    });
+    if(r.ok){
+      sessionStorage.setItem(SESSION_KEY,pwd);
+      enterApp();
+    }else{
+      document.getElementById('login-err').style.display='block';
+      document.getElementById('pwd').select();
+    }
+  }catch(e){
+    document.getElementById('login-err').textContent='Network error: '+e.message;
+    document.getElementById('login-err').style.display='block';
+  }
+}
+
+function logout(){
+  sessionStorage.removeItem(SESSION_KEY);
+  location.reload();
+}
+
+function enterApp(){
+  document.getElementById('login').style.display='none';
+  document.getElementById('app').style.display='block';
+  loadOrders();
+}
+
+async function loadOrders(){
+  const pwd=sessionStorage.getItem(SESSION_KEY);
+  if(!pwd){ logout(); return; }
+  try{
+    const r=await fetch(WORKER_URL+'/admin/list',{
+      headers:{'X-Admin-Password':pwd}
+    });
+    if(r.status===401){ logout(); return; }
+    const data=await r.json();
+    if(data.success){
+      allOrders=data.orders||[];
+      renderStats();
+      render();
+    }else{
+      document.getElementById('list').innerHTML='<div class="list-empty">โหลดไม่สำเร็จ: '+(data.error||'')+'</div>';
+    }
+  }catch(e){
+    document.getElementById('list').innerHTML='<div class="list-empty" style="color:#c0392b">Network error: '+e.message+'</div>';
+  }
+}
+
+function setFilter(status,el){
+  currentFilter=status;
+  document.querySelectorAll('.chip').forEach(c=>c.classList.toggle('active',c===el));
+  render();
+}
+
+function fmtTime(ts){
+  if(!ts) return '';
+  const d=new Date(ts);
+  const m=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+  const pad=n=>n.toString().padStart(2,'0');
+  return d.getDate()+' '+m[d.getMonth()]+' '+pad(d.getHours())+':'+pad(d.getMinutes());
+}
+
+function renderStats(){
+  const counts={pending:0,production:0,shipping:0,delivered:0};
+  let total=0, today=0;
+  const todayStart=new Date(); todayStart.setHours(0,0,0,0);
+  allOrders.forEach(o=>{
+    if(counts[o.status]!==undefined) counts[o.status]++;
+    total+=o.items.total;
+    if(o.createdAt>=todayStart.getTime()) today+=o.items.total;
+  });
+  document.getElementById('cnt-all').textContent=allOrders.length;
+  document.getElementById('cnt-pending').textContent=counts.pending;
+  document.getElementById('cnt-production').textContent=counts.production;
+  document.getElementById('cnt-shipping').textContent=counts.shipping;
+  document.getElementById('cnt-delivered').textContent=counts.delivered;
+  document.getElementById('s-total').textContent=allOrders.length;
+  document.getElementById('s-pending').textContent=counts.pending;
+  document.getElementById('s-today').textContent='฿'+today.toLocaleString();
+  document.getElementById('s-grand').textContent='฿'+total.toLocaleString();
+}
+
+function render(){
+  const list=document.getElementById('list');
+  let filtered=allOrders;
+  if(currentFilter) filtered=allOrders.filter(o=>o.status===currentFilter);
+  if(!filtered.length){
+    list.innerHTML='<div class="list-empty">ไม่มีออเดอร์</div>';
+    return;
+  }
+  list.innerHTML=filtered.map(o=>renderRow(o)).join('');
+}
+
+function renderRow(o){
+  const c=o.customer;
+  const i=o.items;
+  const expanded=expandedId===o.id;
+  const items=[];
+  items.push('Cardigan ฿'+i.shirt);
+  if(i.s) items.push('S×'+i.s);
+  if(i.m) items.push('M×'+i.m);
+  if(i.l) items.push('L×'+i.l);
+  if(i.chars) items.push('Text '+i.chars);
+
+  return `<div class="order-row ${expanded?'expanded':''}" data-id="${o.id}">
+    <div class="order-head" onclick="toggleRow('${o.id}')">
+      <div class="thumb">${o.design?.thumbUrl?`<img src="${o.design.thumbUrl}" alt="">`:''}</div>
+      <div class="row-info">
+        <div class="o-id">${o.id}</div>
+        <div class="o-name">${escapeHtml(c.firstName+' '+c.lastName)}</div>
+        <div class="o-meta">${escapeHtml(c.phone)} · ${fmtTime(o.createdAt)} · ${items.join(' / ')}</div>
+      </div>
+      <div class="row-amt">฿${i.total.toLocaleString()}<small>${o.id}</small></div>
+      <div class="row-amt-col"><span class="row-status s-${o.status}"><span class="dot"></span>${STATUS_LABELS[o.status]||o.status}</span></div>
+    </div>
+    ${expanded?renderExpanded(o):''}
+  </div>`;
+}
+
+function renderExpanded(o){
+  const c=o.customer;
+  const i=o.items;
+  const trackUrl=location.origin+location.pathname.replace(/[^/]*$/,'')+'track.html?id='+o.id+'&t='+(o.token||'');
+  const items=[];
+  items.push(`<div class="row"><span>Cardigan</span><span>฿${i.shirt}</span></div>`);
+  if(i.s) items.push(`<div class="row"><span>Small × ${i.s}</span><span>฿${i.subS}</span></div>`);
+  if(i.m) items.push(`<div class="row"><span>Medium × ${i.m}</span><span>฿${i.subM}</span></div>`);
+  if(i.l) items.push(`<div class="row"><span>Large × ${i.l}</span><span>฿${i.subL}</span></div>`);
+  if(i.chars) items.push(`<div class="row"><span>Text × ${i.chars} ตัวอักษร</span><span>฿${i.subT}</span></div>`);
+
+  return `<div class="expand-body">
+    <div class="exp-grid">
+      <div class="exp-section">
+        <div class="exp-title">ดีไซน์</div>
+        ${o.design?.imageUrl?`<a href="${o.design.imageUrl}" target="_blank"><img class="exp-img" src="${o.design.imageUrl}"></a>`:'<div class="info-line">—</div>'}
+      </div>
+      <div class="exp-section">
+        <div class="exp-title">ลูกค้า</div>
+        <div class="info-line"><span class="k">ชื่อ</span> ${escapeHtml(c.firstName+' '+c.lastName)}</div>
+        <div class="info-line"><span class="k">เบอร์</span> ${escapeHtml(c.phone)} <button class="copy-btn" onclick="event.stopPropagation();copyText('${escapeAttr(c.phone)}')">📋</button></div>
+        <div class="info-line"><span class="k">ที่อยู่</span> ${escapeHtml(c.address)} <button class="copy-btn" onclick="event.stopPropagation();copyText('${escapeAttr(c.address)}')">📋</button></div>
+        ${c.note?`<div class="info-line"><span class="k">หมายเหตุ</span> ${escapeHtml(c.note)}</div>`:''}
+        <div class="exp-title" style="margin-top:14px">รายการ</div>
+        <div class="bill-mini">
+          ${items.join('')}
+          <div class="total"><span>Total</span><b>฿${i.total.toLocaleString()}</b></div>
+        </div>
+      </div>
+    </div>
+    <div class="exp-title">เปลี่ยนสถานะ — ปัจจุบัน: <b style="color:var(--char)">${STATUS_LABELS[o.status]}</b></div>
+    <div class="actions">
+      ${['pending','production','shipping','delivered'].filter(s=>s!==o.status).map(s=>
+        `<button class="action go-${s}" onclick="event.stopPropagation();updateStatus('${o.id}','${s}')">→ ${STATUS_LABELS[s]}</button>`
+      ).join('')}
+      <button class="action" onclick="event.stopPropagation();window.open('${trackUrl}','_blank')">🔗 ดูหน้าลูกค้า</button>
+    </div>
+  </div>`;
+}
+
+function escapeHtml(s){
+  if(s==null) return '';
+  return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function escapeAttr(s){ return String(s||'').replace(/'/g,'&#39;').replace(/\n/g,' '); }
+
+function toggleRow(id){
+  expandedId=(expandedId===id)?null:id;
+  render();
+}
+
+async function updateStatus(id, newStatus){
+  if(!confirm('เปลี่ยนสถานะ '+id+' เป็น "'+STATUS_LABELS[newStatus]+'" ?')) return;
+  const pwd=sessionStorage.getItem(SESSION_KEY);
+  try{
+    const r=await fetch(WORKER_URL+'/admin/status',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','X-Admin-Password':pwd},
+      body:JSON.stringify({id, status:newStatus})
+    });
+    if(r.status===401){ logout(); return; }
+    const data=await r.json();
+    if(data.success){
+      // update locally
+      const i=allOrders.findIndex(o=>o.id===id);
+      if(i>=0) allOrders[i]=data.order;
+      renderStats(); render();
+    }else{
+      alert('Update fail: '+(data.error||data.message));
+    }
+  }catch(e){ alert('Network error: '+e.message); }
+}
+
+function copyText(t){
+  if(navigator.clipboard) navigator.clipboard.writeText(t);
+}
+
+// auto-login if password in session
+if(sessionStorage.getItem(SESSION_KEY)){
+  enterApp();
+}
+</script>
+</body>
+</html>

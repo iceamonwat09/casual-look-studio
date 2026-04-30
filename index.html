@@ -6,6 +6,7 @@
 <title>Casual Look — Studio</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
 <!-- Google tag (gtag.js) — Casual Look Studio -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-T48HC6NLL6"></script>
 <script>
@@ -346,7 +347,77 @@ html,body{
       <div class="bill-meta" id="bill-meta">Order · —</div>
       <div class="modal-actions">
         <button class="m-btn" onclick="closeModal('confirm-modal')">← ย้อนกลับ</button>
-        <button class="m-btn primary" onclick="confirmSave()">ยืนยัน ↓</button>
+        <button class="m-btn primary" onclick="goToShipping()">ถัดไป →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SHIPPING FORM MODAL -->
+  <div id="ship-modal" class="modal">
+    <div class="modal-card" style="width:320px">
+      <button class="modal-close" onclick="closeModal('ship-modal')">✕</button>
+      <div class="modal-title">ข้อมูลจัดส่ง</div>
+      <div class="modal-sub">สำหรับติดตามและจัดส่งสินค้า</div>
+      <div style="display:flex;flex-direction:column;gap:8px;text-align:left;margin-top:6px">
+        <div>
+          <div class="flbl" style="text-align:left">ชื่อ <span style="color:#c0392b">*</span></div>
+          <input class="inp" id="ship-fname" type="text" placeholder="ชื่อจริง" maxlength="40">
+        </div>
+        <div>
+          <div class="flbl" style="text-align:left">นามสกุล <span style="color:#c0392b">*</span></div>
+          <input class="inp" id="ship-lname" type="text" placeholder="นามสกุล" maxlength="40">
+        </div>
+        <div>
+          <div class="flbl" style="text-align:left">เบอร์โทร <span style="color:#c0392b">*</span></div>
+          <input class="inp" id="ship-phone" type="tel" placeholder="08X-XXX-XXXX" maxlength="20" inputmode="tel">
+        </div>
+        <div>
+          <div class="flbl" style="text-align:left">ที่อยู่จัดส่ง <span style="color:#c0392b">*</span></div>
+          <textarea class="inp" id="ship-addr" rows="3" placeholder="เลขที่ ถนน ตำบล อำเภอ จังหวัด รหัสไปรษณีย์" style="height:auto;padding:10px 14px;resize:vertical;line-height:1.5"></textarea>
+        </div>
+        <div>
+          <div class="flbl" style="text-align:left">หมายเหตุ (ไม่จำเป็น)</div>
+          <input class="inp" id="ship-note" type="text" placeholder="เช่น เวลาส่งสะดวก" maxlength="100">
+        </div>
+        <div id="ship-error" style="font-size:11px;color:#c0392b;letter-spacing:.3px;display:none;margin-top:2px"></div>
+      </div>
+      <div class="modal-actions" style="margin-top:14px">
+        <button class="m-btn" onclick="backToConfirm()">← กลับ</button>
+        <button class="m-btn primary" onclick="submitOrder()">ยืนยันสั่งซื้อ ↓</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ORDER SUCCESS / PAYMENT MODAL -->
+  <div id="pay-modal" class="modal">
+    <div class="modal-card">
+      <button class="modal-close" onclick="closeModal('pay-modal')">✕</button>
+      <div class="modal-title" id="pay-title">กำลังส่งออเดอร์...</div>
+      <div class="modal-sub" id="pay-order-id">Order · —</div>
+      <div id="pay-status" style="font-size:11px;color:var(--stone);margin-bottom:10px;letter-spacing:.3px;line-height:1.5">โปรดรอสักครู่</div>
+      <div id="pay-qr-wrap" style="background:#fff;padding:14px;border-radius:14px;border:.5px solid var(--bd);display:none;margin:10px auto 0;width:fit-content;box-shadow:var(--shadow-sm)">
+        <canvas id="pay-qr"></canvas>
+      </div>
+      <div id="pay-amount" style="font-family:'Playfair Display',serif;font-size:24px;color:var(--gold);margin-top:10px;display:none">฿—</div>
+      <div id="pay-info" style="font-size:10.5px;color:var(--stone);line-height:1.6;margin-top:8px;display:none">
+        สแกน QR ด้วย Mobile Banking<br>
+        ของธนาคารใดก็ได้ (PromptPay)
+      </div>
+      <div id="pay-track-link" style="display:none;margin-top:14px;padding:12px;background:var(--cream);border:.5px solid var(--bd);border-radius:11px;text-align:left">
+        <div style="font-size:9px;letter-spacing:1.5px;color:var(--stone);text-transform:uppercase;margin-bottom:5px">📌 ลิงก์ติดตามออเดอร์</div>
+        <div id="pay-track-url" style="font-size:11px;color:var(--gold);word-break:break-all;font-family:monospace;line-height:1.4;margin-bottom:8px">—</div>
+        <div style="display:flex;gap:6px">
+          <button class="m-btn" style="height:34px;font-size:10px;flex:1" onclick="copyTrackUrl()">📋 Copy</button>
+          <button class="m-btn" style="height:34px;font-size:10px;flex:1" onclick="openTrackUrl()">เปิดหน้าติดตาม</button>
+        </div>
+        <div style="font-size:10px;color:var(--stone);margin-top:8px;line-height:1.5;font-style:italic">บันทึกลิงก์นี้ไว้เพื่อกลับมาดูสถานะ ระบบจดจำในเครื่องของคุณ — เปิดผ่าน browser เดิมได้เลย</div>
+      </div>
+      <div class="modal-actions" id="pay-actions" style="display:none">
+        <button class="m-btn line-cta" onclick="openLineApp()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.03 2 11c0 3.05 1.6 5.75 4.1 7.46V22l3.8-2.1c.67.19 1.38.1 2.1.1 5.52 0 10-4.03 10-9S17.52 2 12 2z"/></svg>
+          ส่งสลิปทาง LINE
+        </button>
+        <button class="m-btn primary" onclick="closeModal('pay-modal')">เสร็จสิ้น</button>
       </div>
     </div>
   </div>
@@ -500,8 +571,12 @@ const CW=360,CH=400;
 // ── PRICING CONFIG ──
 const PRICE_SHIRT=250, PRICE_S=25, PRICE_M=40, PRICE_L=50, PRICE_TEXT_PER_CHAR=10;
 const SIZE_RATIO={small:0.08, medium:0.09, large:0.11};
+// ⚙ Config
 const LINE_ID='@863tjnsq';
-const LINE_ADD_URL='https://line.me/R/ti/p/'+encodeURIComponent(LINE_ID);
+const LINE_ADD_URL=LINE_ID?('https://line.me/R/ti/p/'+encodeURIComponent(LINE_ID)):'';
+const WORKER_URL='https://casuallook-bot.iceamonwat.workers.dev';
+const TRACK_URL=location.origin+location.pathname.replace(/[^/]*$/,'')+'track.html';
+const STORAGE_KEY='cl_my_orders_v1';
 const canvas=new fabric.Canvas('c',{
   width:CW,height:CH,backgroundColor:'#FDFBF8',
   preserveObjectStacking:true,
@@ -950,20 +1025,125 @@ function onClickSave(){
   openModal('confirm-modal');
 }
 
-function confirmSave(){
+// ── Step 1: ยืนยันราคา → ไปหน้ากรอกข้อมูลจัดส่ง ──
+let __pendingImage=null, __pendingPrice=null;
+function goToShipping(){
+  // ห้ามไปต่อถ้ายังไม่มีอะไรบน canvas นอกจากเสื้อเปล่า
   closeModal('confirm-modal');
   const p=calculatePrice();
-  exportWithPriceFooter(p).then(()=>{
-    // copy รายละเอียดไปคลิปบอร์ด
-    const text=buildOrderText(p);
-    try{ navigator.clipboard && navigator.clipboard.writeText(text); }catch(e){}
-    // track analytics (ไม่ block flow ถ้า network ช้า/ล่ม)
+  __pendingPrice=p;
+  exportWithPriceFooter(p).then(imageDataUrl=>{
+    __pendingImage=imageDataUrl;
     trackSave(p);
-    // เปิด LINE modal แจ้ง Add Line
-    openLineModalAfterSave();
-  }).catch(err=>{
-    console.error('Save flow failed:',err);
-  });
+    openModal('ship-modal');
+    setTimeout(()=>document.getElementById('ship-fname').focus(),150);
+  }).catch(err=>console.error('export fail:',err));
+}
+
+function backToConfirm(){
+  closeModal('ship-modal');
+  openModal('confirm-modal');
+}
+
+// ── Step 2: validate + ส่งออเดอร์เข้า Worker ──
+async function submitOrder(){
+  const fname=document.getElementById('ship-fname').value.trim();
+  const lname=document.getElementById('ship-lname').value.trim();
+  const phone=document.getElementById('ship-phone').value.trim();
+  const addr=document.getElementById('ship-addr').value.trim();
+  const note=document.getElementById('ship-note').value.trim();
+  const errEl=document.getElementById('ship-error');
+
+  // validation
+  if(!fname || !lname){ errEl.textContent='กรุณากรอก ชื่อ + นามสกุล'; errEl.style.display='block'; return; }
+  const phoneClean=phone.replace(/[^0-9]/g,'');
+  if(phoneClean.length<9 || phoneClean.length>13){ errEl.textContent='เบอร์โทรไม่ถูกต้อง (9-13 หลัก)'; errEl.style.display='block'; return; }
+  if(!addr || addr.length<10){ errEl.textContent='กรุณากรอกที่อยู่จัดส่ง (อย่างน้อย 10 ตัวอักษร)'; errEl.style.display='block'; return; }
+  errEl.style.display='none';
+
+  closeModal('ship-modal');
+
+  const p=__pendingPrice;
+  const customer={firstName:fname, lastName:lname, phone:phoneClean, address:addr, note};
+  const items={shirt:p.shirt, s:p.s, m:p.m, l:p.l, subS:p.subS, subM:p.subM, subL:p.subL, chars:p.chars, subT:p.subT, total:p.total};
+
+  // เปิด pay-modal โชว์ loading
+  document.getElementById('pay-title').textContent='กำลังส่งออเดอร์...';
+  document.getElementById('pay-order-id').textContent='โปรดรอสักครู่';
+  document.getElementById('pay-status').textContent='กำลังบันทึกออเดอร์ ส่งรูปไปยังร้าน...';
+  document.getElementById('pay-status').style.color='var(--stone)';
+  document.getElementById('pay-qr-wrap').style.display='none';
+  document.getElementById('pay-amount').style.display='none';
+  document.getElementById('pay-info').style.display='none';
+  document.getElementById('pay-actions').style.display='none';
+  document.getElementById('pay-track-link').style.display='none';
+  openModal('pay-modal');
+
+  if(!WORKER_URL || WORKER_URL.includes('YOUR-SUBDOMAIN')){
+    document.getElementById('pay-status').innerHTML='⚠ Worker ยังไม่ได้ตั้งค่า<br><span style="font-size:10px">เปิด index.html แก้ค่า WORKER_URL ก่อน</span>';
+    document.getElementById('pay-status').style.color='#c0392b';
+    document.getElementById('pay-actions').style.display='flex';
+    return;
+  }
+
+  try{
+    const resp=await fetch(WORKER_URL+'/order',{
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({imageBase64:__pendingImage, items, customer})
+    });
+    const data=await resp.json();
+    if(!resp.ok || !data.success) throw new Error(data.message||data.error||'unknown');
+
+    // เก็บ order ลง localStorage เพื่อให้กลับมาหาได้
+    saveMyOrder({id:data.id, token:data.token, total:items.total, createdAt:Date.now()});
+
+    // success UI
+    const trackUrl=TRACK_URL+'?id='+data.id+'&t='+data.token;
+    document.getElementById('pay-title').textContent='✓ สั่งซื้อสำเร็จ';
+    document.getElementById('pay-order-id').textContent='Order · '+data.id;
+    document.getElementById('pay-status').innerHTML='ชำระเงินผ่าน QR ด้านล่าง<br><span style="font-size:10px">หลังโอนแล้ว ส่งสลิปทาง LINE พร้อมระบุ Order ID</span>';
+    document.getElementById('pay-status').style.color='var(--gold)';
+    document.getElementById('pay-amount').textContent='฿'+items.total.toLocaleString();
+    document.getElementById('pay-amount').style.display='block';
+    document.getElementById('pay-info').style.display='block';
+    document.getElementById('pay-actions').style.display='flex';
+    document.getElementById('pay-qr-wrap').style.display='block';
+    document.getElementById('pay-track-link').style.display='block';
+    document.getElementById('pay-track-url').textContent=trackUrl;
+
+    // QR PromptPay
+    const qcv=document.getElementById('pay-qr');
+    if(typeof QRCode!=='undefined' && data.promptpay){
+      QRCode.toCanvas(qcv,data.promptpay,{
+        width:220, margin:1,
+        color:{dark:'#1E1C1A',light:'#FDFBF8'}
+      }, err=>{ if(err) console.error('QR render fail',err); });
+    }
+
+  }catch(err){
+    console.error('submitOrder fail:',err);
+    document.getElementById('pay-status').innerHTML='⚠ ส่งออเดอร์ไม่สำเร็จ<br><span style="font-size:10px">'+(err.message||err)+'</span><br>รบกวนติดต่อร้านโดยตรงทาง LINE';
+    document.getElementById('pay-status').style.color='#c0392b';
+    document.getElementById('pay-actions').style.display='flex';
+  }
+}
+
+// ── Local order history (per-browser) ──
+function saveMyOrder(o){
+  try{
+    const list=JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]');
+    list.unshift(o);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(list.slice(0,30)));
+  }catch(e){}
+}
+
+function copyTrackUrl(){
+  const url=document.getElementById('pay-track-url').textContent;
+  if(navigator.clipboard) navigator.clipboard.writeText(url).then(()=>showToast('คัดลอกลิงก์แล้ว ✓'));
+}
+function openTrackUrl(){
+  const url=document.getElementById('pay-track-url').textContent;
+  window.open(url,'_blank');
 }
 
 function buildOrderText(p){
@@ -1018,20 +1198,22 @@ function exportWithPriceFooter(p){
         ctx.font='400 '+(20*mult)+'px "Playfair Display", Georgia, serif';
         ctx.fillText('Total  ฿'+p.total.toLocaleString(), cx, fy+Math.round(40*mult));
         const filename='casual-look-'+__lastOrderNo+'.png';
+        // เก็บ dataUrl ไว้ resolve กลับให้ caller (ใช้ส่งเข้า Worker)
+        const finalDataUrl=off.toDataURL('image/png');
         if(off.toBlob){
           off.toBlob(blob=>{
             if(!blob){ // fallback
-              triggerDownload(off.toDataURL('image/png'), filename);
+              triggerDownload(finalDataUrl, filename);
             }else{
               const url=URL.createObjectURL(blob);
               triggerDownload(url, filename);
               setTimeout(()=>URL.revokeObjectURL(url),2000);
             }
-            resolve();
+            resolve(finalDataUrl);
           },'image/png');
         }else{
-          triggerDownload(off.toDataURL('image/png'), filename);
-          resolve();
+          triggerDownload(finalDataUrl, filename);
+          resolve(finalDataUrl);
         }
       }catch(err){
         console.error('Draw/download failed:',err);
@@ -1056,7 +1238,12 @@ function openLineModalAfterSave(){
 }
 
 function openLineApp(){
+  if(!LINE_ADD_URL){ showToast('ยังไม่ได้ตั้ง LINE Bot ID'); return; }
   window.open(LINE_ADD_URL, '_blank');
+}
+// ซ่อนปุ่มแชท LINE ทั้งหมดถ้ายังไม่ได้ตั้ง LINE_ID
+if(!LINE_ID){
+  document.querySelectorAll('.m-btn.line-cta').forEach(b=>b.style.display='none');
 }
 
 function showToast(msg){
