@@ -1,168 +1,163 @@
-# Casual Look — Cloudflare Worker (LINE Payment Integration)
+# Casual Look — Order Management System
 
-Backend serverless function ที่:
-1. รับออเดอร์จากเว็บ (POST /order)
-2. อัพโหลดรูปดีไซน์ไปยัง ImgBB
-3. Push ออเดอร์ + รูปเข้า LINE OA ของร้าน
-4. สร้าง PromptPay QR payload ส่งกลับให้เว็บแสดง QR ให้ลูกค้าสแกนชำระเงิน
+ระบบจัดการ order ครบวงจร — Self-managed บน Cloudflare Worker + KV
+ลูกค้าสั่งจากเว็บ → KV เก็บ order → push notify LINE staff group → ลูกค้าได้ลิงก์ track
+แอดมินเข้า /admin จัดการสถานะ → ลูกค้าเห็น real-time
 
----
+## 📐 Architecture
 
-## 📋 สิ่งที่ต้องเตรียม (ก่อนเริ่ม Setup)
+```
+┌────────────────┐  POST /order   ┌──────────────────┐    push    ┌─────────────┐
+│ index.html     │ ─────────────► │ Cloudflare       │ ─────────► │ LINE Staff  │
+│ (studio)       │                │ Worker           │            │ Group       │
+└────────────────┘                │  + KV (ORDERS)   │            └─────────────┘
+                                  │  + ImgBB upload  │
+┌────────────────┐  GET  /order   │                  │
+│ track.html     │ ◄──────────────┤                  │
+│ (customer)     │   magic-link   │                  │
+└────────────────┘                │                  │
+                                  │                  │
+┌────────────────┐  GET  /admin/* │                  │
+│ admin.html     │ ─────────────► │                  │
+│ (shop)         │   X-Admin-Pwd  │                  │
+└────────────────┘                └──────────────────┘
+```
 
-| # | สิ่งที่ต้องมี | หาได้จาก |
-|---|---|---|
-| 1 | LINE Channel Access Token | https://developers.line.biz/console/ |
-| 2 | LINE Admin User ID | ดูวิธีหาด้านล่าง |
-| 3 | PromptPay หมายเลข | เบอร์มือถือ 10 หลัก หรือเลขประชาชน 13 หลัก |
-| 4 | ImgBB API Key | https://api.imgbb.com/ (free) |
-| 5 | Cloudflare Account | https://dash.cloudflare.com/sign-up |
-| 6 | Node.js 18+ + Wrangler CLI | `npm i -g wrangler` |
+## 📋 Setup Checklist
 
----
+1. ✅ **LINE Messaging API channel** — token + groupId/userId
+2. ✅ **ImgBB API key** — for design image hosting
+3. ✅ **PromptPay number** — phone (10 digits) or NID (13 digits)
+4. ✅ **Admin password** — for /admin dashboard
+5. ✅ **Cloudflare account** + Wrangler CLI
+6. ✅ **KV namespace** — for order storage
 
-## 🔧 Step-by-Step Setup
+## 🚀 Deploy Steps
 
-### Step 1 — สร้าง LINE Messaging API Channel
+### Step 1 — สมัคร service ที่ต้องใช้
+ดู section "Service Setup" ด้านล่าง
 
-1. เข้า https://developers.line.biz/console/
-2. Login ด้วย LINE account
-3. Create new Provider → ตั้งชื่อ "Casual Look"
-4. ใต้ Provider นั้น → **Create Messaging API Channel**
-   - Channel name: `Casual Look Studio`
-   - Channel description: ออเดอร์ตกแต่งเสื้อ
-   - Category / Subcategory: เลือกตามจริง
-5. ที่หน้า Channel → tab **Messaging API**:
-   - หา **Channel access token (long-lived)** → กด Issue → **คัดลอกเก็บ** (จะใช้ใน Step 4)
-6. ที่ tab **Basic settings**:
-   - หา **Bot basic ID** (เช่น `@1234abcd`) → นี่คือ ID ที่ลูกค้าใช้ Add Friend
-
-### Step 2 — หา Push Target ID (User หรือ Group)
-
-`LINE_ADMIN_USER_ID` คือ ID ที่ Worker จะ push ออเดอร์ไป — รองรับทั้ง 3 รูปแบบ:
-
-| Type | ขึ้นต้นด้วย | ใช้เมื่อ |
-|---|---|---|
-| `userId` | `U` | ส่งหาแอดมินคนเดียว (1-on-1 chat) |
-| `groupId` | `C` | ส่งเข้า**กลุ่ม**ทีมงาน (แนะนำ) |
-| `roomId` | `R` | ส่งเข้า multi-person chat (ไม่มีชื่อกลุ่ม) |
-
-**วิธีหา groupId (แนะนำสำหรับร้าน):**
-1. สร้างกลุ่ม LINE ทีมงาน → invite **bot OA** เข้ากลุ่ม
-2. ส่งข้อความอะไรก็ได้ในกลุ่ม
-3. เปิด Webhook ใน LINE Developers Console (Messaging API tab → Webhook URL → ตั้งให้ verify)
-   - หรือใช้ webhook tester เช่น https://webhook.site
-4. จะเห็น JSON event ลักษณะ:
-   ```json
-   {
-     "events": [{
-       "source": {
-         "type": "group",
-         "groupId": "Cxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
-         ...
-       }
-     }]
-   }
-   ```
-5. คัดลอกค่า `groupId` (ขึ้นต้นด้วย `C` ตามด้วย 32 ตัวอักษร)
-
-**วิธีหา userId (สำหรับส่งหาคนเดียว):**
-- ที่หน้า Channel → tab **Basic settings** → เลื่อนลงหา **Your user ID** (ขึ้นต้นด้วย `U`)
-
-**สำคัญ:** Bot ต้อง**อยู่ในกลุ่ม / เป็นเพื่อน**กับ target ID ก่อน ไม่งั้น push จะ fail (403)
-
-### Step 3 — สมัคร ImgBB API Key
-
-1. https://api.imgbb.com/ → Get API Key
-2. Sign up หรือ Login
-3. คัดลอก API Key (32 ตัวอักษร)
-
-### Step 4 — Deploy Worker
+### Step 2 — สร้าง KV namespace (ใหม่!)
 
 ```bash
-# ติดตั้ง wrangler (ครั้งแรก)
-npm install -g wrangler
-
-# Login Cloudflare
+cd worker
+npm install -g wrangler  # ถ้ายังไม่มี
 wrangler login
 
-# เข้าโฟลเดอร์ worker
-cd worker
+# สร้าง KV namespace
+wrangler kv:namespace create ORDERS
+```
 
-# ตั้ง secrets (4 ตัว)
+จะได้ output ประมาณ:
+```
+🌀 Creating namespace with title "casuallook-bot-ORDERS"
+✨ Success! Add the following to your configuration file in your kv_namespaces array:
+[[kv_namespaces]]
+binding = "ORDERS"
+id = "abc123def456..."
+```
+
+**คัดลอก `id`** แล้ววางใน `wrangler.toml` แทน `REPLACE_WITH_KV_ID_AFTER_CREATE`
+
+### Step 3 — ตั้ง secrets (5 ตัว)
+
+```bash
 wrangler secret put LINE_CHANNEL_ACCESS_TOKEN
-# (paste token จาก Step 1)
+# paste: DSdCa+4sZ...lFU=
 
 wrangler secret put LINE_ADMIN_USER_ID
-# (paste user ID จาก Step 2)
+# paste: Ca353c2f59bd9c63b0455cd7f41d78ed4
 
 wrangler secret put PROMPTPAY_TARGET
-# (เบอร์มือถือ 10 หลัก เช่น 0812345678)
+# paste: 0840407297
 
 wrangler secret put IMGBB_API_KEY
-# (paste API key จาก Step 3)
+# paste: cf4bc8bf7df553da76ca676c7e36eb08
 
-# Deploy
+wrangler secret put ADMIN_PASSWORD
+# paste: !QAZXSW@ice
+```
+
+### Step 4 — Deploy
+
+```bash
 wrangler deploy
 ```
 
-หลัง deploy จะได้ URL ประมาณ:
-```
-https://casual-look-line.<your-subdomain>.workers.dev
-```
+ได้ URL: `https://casuallook-bot.iceamonwat.workers.dev`
 
-### Step 5 — แก้ Frontend ให้ชี้ไปที่ Worker
-
-เปิด `index.html` หา constant `WORKER_URL`:
-
-```javascript
-const WORKER_URL = 'https://casual-look-line.YOUR-SUBDOMAIN.workers.dev';
-```
-
-แทน `YOUR-SUBDOMAIN` ด้วย subdomain จริงของคุณที่ได้จาก Step 4
-
----
-
-## ✅ ทดสอบ
+### Step 5 — ทดสอบ
 
 ```bash
-# health check
-curl https://casual-look-line.YOUR-SUBDOMAIN.workers.dev/health
+curl https://casuallook-bot.iceamonwat.workers.dev/health
 # → {"ok":true,"time":...}
 ```
 
-หรือเปิดเว็บ → ออกแบบเสื้อ → กด Save → ยืนยัน
-- ✓ ในเว็บจะมี QR PromptPay โผล่
-- ✓ ใน LINE chat ของแอดมินจะเห็นรูปเสื้อ + รายละเอียดออเดอร์
+## 🌐 Frontend Pages
 
----
+หลัง deploy worker → push code ขึ้น GitHub Pages → 3 หน้าใช้งานได้:
 
-## 💰 ค่าใช้จ่าย (Free Tier)
+| URL | หน้าที่ | Auth |
+|---|---|---|
+| `/` หรือ `/index.html` | Studio ออกแบบเสื้อ + สั่งซื้อ | Public |
+| `/track.html?id=...&t=...` | ลูกค้าติดตามสถานะ | Magic link token |
+| `/admin.html` | แอดมินจัดการ order | Password |
+
+## 🔑 Service Setup
+
+### LINE Messaging API
+
+1. https://developers.line.biz/console/ → Create Messaging API Channel
+2. **Messaging API tab** → Issue **Channel access token (long-lived)**
+3. หา **Push target ID**:
+   - **Group** (แนะนำ): สร้างกลุ่ม + invite bot → ส่งข้อความ → ดู `groupId` ใน webhook event
+   - **User**: ใช้ Your user ID จาก Basic settings tab
+4. **Bot ต้องอยู่ในกลุ่ม / เป็นเพื่อน** กับ target ID ก่อน ไม่งั้น push ล้มเหลว 403
+
+### ImgBB
+
+1. https://api.imgbb.com/ → Get API Key (ฟรี)
+2. รูปจะอยู่บน server ImgBB **90 วัน** หลังสร้าง
+
+### PromptPay
+
+ใช้เบอร์มือถือ (10 หลัก) หรือเลขประชาชน (13 หลัก) ที่ผูกกับ PromptPay
+
+## 🐛 Troubleshooting
+
+| อาการ | สาเหตุ / แก้ |
+|---|---|
+| `LINE push failed [401]` | Token ผิด / expired → re-issue |
+| `LINE push failed [403]` | Bot ไม่ได้อยู่ในกลุ่ม / ไม่เป็นเพื่อน |
+| `imgbb upload failed` | API Key ผิด / quota เต็ม |
+| `kv binding not configured` | ยังไม่ได้ใส่ `id` ใน wrangler.toml — ทำ Step 2 |
+| Frontend CORS error | `ALLOWED_ORIGIN` ใน wrangler.toml ไม่ตรงกับ URL เว็บ |
+| Admin login 401 | password ไม่ตรง — ตรวจ `wrangler secret list` |
+
+## 💰 Cost (Free Tier)
 
 | Service | Free Limit |
 |---|---|
 | Cloudflare Workers | 100,000 requests/day |
-| LINE Messaging API (Free) | 200 push messages/month |
-| ImgBB | Unlimited uploads (รูปอยู่ 30 วัน) |
+| Cloudflare KV | 100,000 reads + 1,000 writes/day, 1 GB storage |
+| LINE Push | 200/month (Free), 5,000 (Light ฿1,200) |
+| ImgBB | Unlimited (image lasts 90 days) |
 
-**ถ้า > 200 ออเดอร์/เดือน:** อัพเกรด LINE OA เป็น Light (~฿1,200/เดือน, 5,000 push)
+100k request/day = ~3 ล้าน/เดือน → เพียงพอสำหรับ 10,000+ ออเดอร์/วัน
 
----
+## 🔒 Security
 
-## 🐛 Troubleshooting
+- Secrets ทั้งหมดอยู่ใน Cloudflare Secrets (encrypted) ไม่อยู่ใน repo
+- Magic link token = 10 ตัวอักษร random (~3.6 quadrillion combinations)
+- Admin password ส่งใน header `X-Admin-Password` (ผ่าน HTTPS)
+- KV ไม่มี public access — ผ่าน Worker เท่านั้น
+- CORS lock ตาม `ALLOWED_ORIGIN`
 
-| อาการ | สาเหตุ / วิธีแก้ |
-|---|---|
-| `LINE push failed [401]` | Token ผิด หรือ expired → re-issue |
-| `LINE push failed [403]` | Bot ยังไม่ได้เป็นเพื่อนกับ admin → admin ต้อง Add bot ก่อน |
-| `imgbb upload failed` | API Key ผิด / quota เต็ม |
-| Frontend error CORS | ตรวจ `ALLOWED_ORIGIN` ใน wrangler.toml ตรงกับ URL เว็บ |
-| QR สแกนแล้ว amount ไม่ตรง | ตรวจ `PROMPTPAY_TARGET` เบอร์ถูกไหม |
+## 🔄 Status Lifecycle
 
----
+```
+รอชำระเงิน  →  ระหว่างการผลิต  →  จัดส่ง  →  ได้รับสินค้า
+  pending       production        shipping     delivered
+```
 
-## 🔒 Security Notes
-
-- ไม่มี secret อยู่ในโค้ด — ทั้งหมดเก็บใน Cloudflare Workers Secrets (encrypted)
-- CORS จำกัด origin ตาม `ALLOWED_ORIGIN` — กัน website อื่นเรียก API
-- ImgBB upload จำกัด 30 วันแล้วลบ — ลด digital footprint
+Admin คลิกปุ่มใน admin.html → KV update → ลูกค้า refresh track.html เห็นทันที

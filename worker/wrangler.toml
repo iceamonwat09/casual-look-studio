@@ -1,19 +1,20 @@
-name = "casual-look-line"
+name = "casuallook-bot"
 main = "worker.js"
 compatibility_date = "2024-12-01"
 
-# Adjust to match the GitHub Pages origin (no trailing slash)
 [vars]
 ALLOWED_ORIGIN = "https://iceamonwat09.github.io"
 
-# Secrets (do NOT put values here — set via:
+# KV namespace for order storage
+# Create once with:  wrangler kv:namespace create ORDERS
+# Then paste the returned id below
+[[kv_namespaces]]
+binding = "ORDERS"
+id = "REPLACE_WITH_KV_ID_AFTER_CREATE"
+
+# Secrets (set via CLI, do NOT commit values):
 #   wrangler secret put LINE_CHANNEL_ACCESS_TOKEN
 #   wrangler secret put LINE_ADMIN_USER_ID
 #   wrangler secret put PROMPTPAY_TARGET
 #   wrangler secret put IMGBB_API_KEY
-# )
-
-# Optional: route only — defaults to *.workers.dev subdomain
-# [[routes]]
-# pattern = "api.your-domain.com/order"
-# custom_domain = true
+#   wrangler secret put ADMIN_PASSWORD
