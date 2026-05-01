@@ -205,6 +205,15 @@ html,body{
 .m-btn.primary:active{background:linear-gradient(135deg,var(--accent) 0%,var(--gold) 100%)}
 .m-btn.line-cta{background:#06C755;color:#fff;border-color:#06C755;box-shadow:0 3px 10px rgba(6,199,85,.3);display:flex;align-items:center;justify-content:center;gap:6px}
 .m-btn.line-cta:active{background:#05a648}
+.ship-form{display:flex;flex-direction:column;gap:9px;margin-top:12px}
+.ship-form label{font-size:9.5px;color:var(--stone);letter-spacing:1.4px;text-transform:uppercase;font-weight:500;display:block;margin-bottom:3px}
+.ship-form input,.ship-form textarea{width:100%;border:.5px solid var(--bd-strong);border-radius:10px;padding:10px 12px;font-size:13px;font-family:'DM Sans',sans-serif;background:var(--warm);color:var(--char);transition:all .15s;-webkit-appearance:none;outline:none}
+.ship-form input:focus,.ship-form textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(201,149,107,.18)}
+.ship-form textarea{resize:none;min-height:64px;line-height:1.45;font-family:'DM Sans',sans-serif}
+.ship-form .err{font-size:10.5px;color:#c0392b;margin-top:4px;display:none}
+.ship-form .err.show{display:block}
+.ship-busy{font-size:11px;color:var(--stone);text-align:center;margin-top:8px;display:none}
+.ship-busy.show{display:block}
 /* TEXT COLOR SWATCHES */
 .color-swatches{display:flex;gap:10px;justify-content:center;padding:6px 0}
 .cswatch{width:44px;height:44px;border-radius:50%;cursor:pointer;border:3px solid transparent;transition:all .2s;position:relative;box-shadow:0 2px 8px rgba(0,0,0,.15);display:flex;align-items:center;justify-content:center}
@@ -346,7 +355,40 @@ html,body{
       <div class="bill-meta" id="bill-meta">Order · —</div>
       <div class="modal-actions">
         <button class="m-btn" onclick="closeModal('confirm-modal')">← ย้อนกลับ</button>
-        <button class="m-btn primary" onclick="confirmSave()">ยืนยัน ↓</button>
+        <button class="m-btn primary" onclick="goToShipping()">ถัดไป →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SHIPPING MODAL -->
+  <div id="ship-modal" class="modal">
+    <div class="modal-card">
+      <button class="modal-close" onclick="closeModal('ship-modal')">✕</button>
+      <div class="modal-title">ข้อมูลจัดส่ง</div>
+      <div class="modal-sub">กรอกเพื่อยืนยันออเดอร์</div>
+      <div class="ship-form">
+        <div>
+          <label>ชื่อ-นามสกุล *</label>
+          <input id="ship-name" type="text" maxlength="100" autocomplete="name" placeholder="เช่น สมหญิง สวยงาม">
+        </div>
+        <div>
+          <label>เบอร์โทร *</label>
+          <input id="ship-phone" type="tel" maxlength="20" autocomplete="tel" placeholder="0812345678" inputmode="tel">
+        </div>
+        <div>
+          <label>ที่อยู่จัดส่ง *</label>
+          <textarea id="ship-address" rows="3" maxlength="500" placeholder="บ้านเลขที่ / หมู่ / ซอย / ถนน / แขวง / เขต / จังหวัด / รหัสไปรษณีย์"></textarea>
+        </div>
+        <div>
+          <label>หมายเหตุ (ไม่บังคับ)</label>
+          <input id="ship-note" type="text" maxlength="300" placeholder="เช่น ฝากไว้หน้าบ้าน">
+        </div>
+        <div class="err" id="ship-err"></div>
+        <div class="ship-busy" id="ship-busy">กำลังบันทึกออเดอร์...</div>
+      </div>
+      <div class="modal-actions">
+        <button class="m-btn" onclick="closeModal('ship-modal')">← ย้อนกลับ</button>
+        <button class="m-btn primary" id="ship-submit" onclick="submitOrder()">ยืนยันสั่งซื้อ ↓</button>
       </div>
     </div>
   </div>
@@ -950,21 +992,108 @@ function onClickSave(){
   openModal('confirm-modal');
 }
 
-function confirmSave(){
+// ── Order submit flow ──
+const ORDER_API = 'https://casuallook-bot.iceamonwat.workers.dev';
+
+function goToShipping(){
   closeModal('confirm-modal');
-  const p=calculatePrice();
-  exportWithPriceFooter(p).then(()=>{
-    // copy รายละเอียดไปคลิปบอร์ด
-    const text=buildOrderText(p);
-    try{ navigator.clipboard && navigator.clipboard.writeText(text); }catch(e){}
-    // track analytics (ไม่ block flow ถ้า network ช้า/ล่ม)
-    trackSave(p);
-    // เปิด LINE modal แจ้ง Add Line
-    openLineModalAfterSave();
-  }).catch(err=>{
-    console.error('Save flow failed:',err);
+  // restore last entered shipping info (if any) within session
+  try{
+    const cached=JSON.parse(localStorage.getItem('cl_ship')||'null');
+    if(cached){
+      document.getElementById('ship-name').value=cached.name||'';
+      document.getElementById('ship-phone').value=cached.phone||'';
+      document.getElementById('ship-address').value=cached.address||'';
+    }
+  }catch(e){}
+  document.getElementById('ship-err').classList.remove('show');
+  document.getElementById('ship-busy').classList.remove('show');
+  document.getElementById('ship-submit').disabled=false;
+  openModal('ship-modal');
+}
+
+function buildItemsForOrder(p){
+  const items=[];
+  items.push({label:'Cardigan · ตัวเสื้อ',amount:p.shirt});
+  if(p.s) items.push({label:'Accessory · Small × '+p.s,amount:p.subS});
+  if(p.m) items.push({label:'Accessory · Medium × '+p.m,amount:p.subM});
+  if(p.l) items.push({label:'Accessory · Large × '+p.l,amount:p.subL});
+  if(p.chars) items.push({label:'Text · '+p.chars+' ตัวอักษร',amount:p.subT});
+  return items;
+}
+
+function exportDesignDataUrl(){
+  // export plain canvas (no footer) — admin จะเห็นภาพดีไซน์ลูกค้า
+  return new Promise((resolve,reject)=>{
+    canvas.discardActiveObject(); canvas.renderAll();
+    try{
+      const url=canvas.toDataURL({format:'png',multiplier:2});
+      resolve(url);
+    }catch(err){
+      console.error('toDataURL failed:',err);
+      reject(err);
+    }
   });
 }
+
+async function submitOrder(){
+  const errEl=document.getElementById('ship-err');
+  const busyEl=document.getElementById('ship-busy');
+  const btn=document.getElementById('ship-submit');
+  errEl.classList.remove('show');
+  const name=document.getElementById('ship-name').value.trim();
+  const phone=document.getElementById('ship-phone').value.trim();
+  const address=document.getElementById('ship-address').value.trim();
+  const note=document.getElementById('ship-note').value.trim();
+  if(!name){ errEl.textContent='กรุณากรอกชื่อ-นามสกุล'; errEl.classList.add('show'); return; }
+  const phoneDigits=phone.replace(/\D/g,'');
+  if(phoneDigits.length<9){ errEl.textContent='เบอร์โทรไม่ถูกต้อง'; errEl.classList.add('show'); return; }
+  if(address.length<8){ errEl.textContent='กรุณากรอกที่อยู่ให้ครบถ้วน'; errEl.classList.add('show'); return; }
+
+  try{ localStorage.setItem('cl_ship',JSON.stringify({name,phone,address})); }catch(e){}
+
+  btn.disabled=true;
+  busyEl.classList.add('show');
+
+  const p=calculatePrice();
+  let designDataUrl='';
+  try{ designDataUrl=await exportDesignDataUrl(); }
+  catch(e){ /* still submit without image */ }
+
+  try{
+    const r=await fetch(ORDER_API+'/orders',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        name,phone,address,note,
+        items:buildItemsForOrder(p),
+        total:p.total,
+        designDataUrl,
+      }),
+    });
+    const j=await r.json();
+    if(!r.ok||!j.ok) throw new Error(j.error||'submit failed');
+
+    try{
+      const recent=JSON.parse(localStorage.getItem('cl_orders')||'[]');
+      recent.unshift({id:j.id,token:j.token,at:Date.now()});
+      localStorage.setItem('cl_orders',JSON.stringify(recent.slice(0,10)));
+    }catch(e){}
+
+    trackSave(p);
+    closeModal('ship-modal');
+    location.href='track.html?id='+encodeURIComponent(j.id)+'&t='+encodeURIComponent(j.token);
+  }catch(e){
+    console.error(e);
+    errEl.textContent='เกิดข้อผิดพลาด: '+(e.message||'ลองใหม่อีกครั้ง');
+    errEl.classList.add('show');
+    busyEl.classList.remove('show');
+    btn.disabled=false;
+  }
+}
+
+// kept for backward compat (not bound to UI anymore)
+function confirmSave(){ goToShipping(); }
 
 function buildOrderText(p){
   let t='[Casual Look] Order '+__lastOrderNo+'\n';

@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>ติดตามออเดอร์ — Casual Look</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500&family=DM+Sans:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --cream:#F8F5F0;--warm:#FDFBF8;--stone:#9A8F85;
+  --char:#1E1C1A;--accent:#C9956B;--alight:#F0E3D6;
+  --gold:#B8864C;--bd:rgba(30,28,26,.09);--bd-strong:rgba(30,28,26,.14);
+  --line:#06C755;--ok:#2e8b57;--warn:#c08436;--danger:#c0392b;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{
+  background:var(--cream);min-height:100vh;color:var(--char);
+  font-family:'DM Sans',sans-serif;padding:20px 14px 60px;
+}
+.wrap{max-width:560px;margin:0 auto}
+.brand{text-align:center;margin-bottom:20px}
+.brand h1{font-family:'Playfair Display',serif;font-size:26px;font-weight:400;letter-spacing:1px}
+.brand .sub{font-size:9.5px;letter-spacing:3px;color:var(--accent);text-transform:uppercase;margin-top:3px}
+.card{background:var(--warm);border-radius:16px;border:.5px solid var(--bd);padding:20px 18px;margin-bottom:14px;box-shadow:0 2px 10px rgba(30,28,26,.04)}
+.card h2{font-family:'Playfair Display',serif;font-size:18px;font-weight:500;margin-bottom:8px}
+.muted{color:var(--stone);font-size:12px;letter-spacing:.3px}
+.order-meta{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap}
+.order-id{font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;letter-spacing:.5px}
+.order-id b{color:var(--gold);font-weight:700}
+.total{font-family:'Playfair Display',serif;font-size:24px;color:var(--gold);font-weight:500}
+.total small{font-size:11px;color:var(--stone);margin-left:3px}
+.timeline{margin-top:14px;padding:6px 0}
+.tl-row{display:flex;align-items:flex-start;gap:14px;position:relative;padding:8px 0}
+.tl-row::after{content:'';position:absolute;left:14px;top:30px;bottom:-12px;width:2px;background:var(--bd-strong)}
+.tl-row:last-child::after{display:none}
+.tl-row.done::after{background:var(--accent)}
+.tl-dot{width:30px;height:30px;border-radius:50%;background:var(--cream);border:2px solid var(--bd-strong);display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--stone);flex-shrink:0;z-index:1;font-weight:600}
+.tl-row.done .tl-dot{background:var(--accent);border-color:var(--accent);color:#fff}
+.tl-row.current .tl-dot{background:var(--char);border-color:var(--char);color:#fff;box-shadow:0 0 0 4px rgba(30,28,26,.1)}
+.tl-text{padding-top:4px;flex:1}
+.tl-label{font-size:13.5px;font-weight:500;letter-spacing:.2px}
+.tl-row:not(.done):not(.current) .tl-label{color:var(--stone)}
+.tl-meta{font-size:11px;color:var(--stone);margin-top:2px}
+.qr-wrap{text-align:center;padding:8px 0}
+.qr-wrap img{width:100%;max-width:280px;border-radius:14px;border:.5px solid var(--bd);background:#fff;padding:8px}
+.qr-amount{font-family:'Playfair Display',serif;font-size:22px;color:var(--gold);font-weight:500;margin-top:8px}
+.qr-pay{font-size:12px;color:var(--stone);margin-top:2px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;height:44px;padding:0 18px;border-radius:11px;border:.5px solid var(--bd-strong);background:var(--cream);color:var(--char);font-size:12px;letter-spacing:1.4px;text-transform:uppercase;font-weight:500;cursor:pointer;transition:transform .12s,background .15s;font-family:'DM Sans',sans-serif;width:100%;text-decoration:none}
+.btn:active{transform:scale(.97)}
+.btn.primary{background:var(--char);color:var(--warm);border-color:var(--char)}
+.btn.line{background:var(--line);border-color:var(--line);color:#fff}
+.btn.line:active{background:#05a648}
+.btn.gold{background:linear-gradient(135deg,var(--accent),var(--gold));color:#fff;border-color:var(--gold)}
+.row-2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.row-2 .btn{width:100%}
+.items{margin-top:10px;border-top:.5px dashed var(--bd-strong);padding-top:10px}
+.item{display:flex;justify-content:space-between;font-size:12.5px;padding:4px 0;color:var(--char)}
+.item .l{color:var(--stone)}
+.design-img{width:100%;border-radius:12px;border:.5px solid var(--bd);background:#fff;display:block;margin-top:8px}
+.copy-btn{font-size:10.5px;color:var(--accent);background:none;border:none;cursor:pointer;padding:2px 6px;text-decoration:underline;font-family:inherit}
+.recover{margin-top:18px;padding:18px;background:var(--warm);border-radius:14px;border:.5px solid var(--bd)}
+.recover input{width:100%;border:.5px solid var(--bd-strong);border-radius:10px;padding:10px 12px;font-size:13px;font-family:inherit;margin-bottom:8px;outline:none;background:var(--cream)}
+.recover input:focus{border-color:var(--accent)}
+.empty{text-align:center;padding:40px 16px;color:var(--stone)}
+.empty h2{font-family:'Playfair Display',serif;font-size:22px;color:var(--char);margin-bottom:8px}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--char);color:var(--warm);padding:10px 18px;border-radius:24px;font-size:12.5px;opacity:0;transition:opacity .25s;pointer-events:none;z-index:100}
+.toast.show{opacity:1}
+.err-box{background:#fdecec;border:.5px solid #f5c6c6;color:#c0392b;padding:10px 12px;border-radius:10px;font-size:12.5px;margin-bottom:10px;display:none}
+.err-box.show{display:block}
+.spinner{width:30px;height:30px;border:3px solid var(--bd-strong);border-top-color:var(--accent);border-radius:50%;animation:sp 0.8s linear infinite;margin:30px auto}
+@keyframes sp{to{transform:rotate(360deg)}}
+.note{font-size:11.5px;color:var(--stone);line-height:1.5;margin-top:8px}
+.tracking{margin-top:8px;padding:8px 12px;background:var(--alight);border-radius:8px;font-size:12.5px;color:var(--char)}
+.tracking b{color:var(--gold)}
+@media(max-width:420px){
+  .total{font-size:20px}
+  .card{padding:16px 14px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="brand">
+    <h1>Casual Look</h1>
+    <div class="sub">Order Tracking</div>
+  </div>
+
+  <div id="loading" class="spinner"></div>
+
+  <div id="content" style="display:none">
+    <div class="err-box" id="err-box"></div>
+
+    <div class="card">
+      <div class="order-meta">
+        <div>
+          <div class="order-id">Order <b id="oid">—</b></div>
+          <div class="muted" id="created">—</div>
+        </div>
+        <div class="total">฿<span id="total">0</span></div>
+      </div>
+
+      <div class="timeline" id="timeline"></div>
+
+      <div class="tracking" id="tracking-box" style="display:none">
+        📦 Tracking: <b id="tracking-no"></b>
+        <button class="copy-btn" onclick="copyText(document.getElementById('tracking-no').textContent,'คัดลอกแล้ว')">[คัดลอก]</button>
+      </div>
+    </div>
+
+    <!-- Payment card (only when pending) -->
+    <div class="card" id="pay-card" style="display:none">
+      <h2>ชำระเงิน</h2>
+      <div class="muted">สแกน QR PromptPay ด้านล่าง</div>
+      <div class="qr-wrap">
+        <img id="qr-img" alt="PromptPay QR">
+        <div class="qr-amount">฿<span id="qr-amount">0</span></div>
+        <div class="qr-pay">PromptPay</div>
+      </div>
+      <div class="row-2" style="margin-top:10px">
+        <button class="btn" onclick="document.getElementById('slip-input').click()">📤 ส่งสลิป</button>
+        <a class="btn line" href="https://line.me/R/ti/p/%40863tjnsq" target="_blank">LINE OA</a>
+      </div>
+      <input type="file" id="slip-input" accept="image/*" style="display:none" onchange="uploadSlip(event)">
+      <div class="note">หลังโอนเสร็จ — กดปุ่ม "ส่งสลิป" เพื่ออัปโหลดสลิปการโอนเงิน</div>
+    </div>
+
+    <div class="card" id="slip-card" style="display:none">
+      <h2>สลิปที่อัปโหลดแล้ว</h2>
+      <img class="design-img" id="slip-img">
+    </div>
+
+    <div class="card">
+      <h2>รายละเอียด</h2>
+      <div class="items" id="items"></div>
+    </div>
+
+    <div class="card">
+      <h2>ดีไซน์ของคุณ</h2>
+      <img class="design-img" id="design-img" alt="design" style="display:none">
+      <div class="muted" id="no-design" style="display:none">— ไม่มีภาพดีไซน์ —</div>
+    </div>
+
+    <div class="card">
+      <h2>จัดส่งถึง</h2>
+      <div style="font-size:13.5px;line-height:1.6">
+        <div><b id="cust-name"></b>
+          <button class="copy-btn" onclick="copyText(document.getElementById('cust-name').textContent,'คัดลอกชื่อแล้ว')">[คัดลอก]</button>
+        </div>
+        <div>📞 <span id="cust-phone"></span>
+          <button class="copy-btn" onclick="copyText(document.getElementById('cust-phone').textContent,'คัดลอกเบอร์แล้ว')">[คัดลอก]</button>
+        </div>
+        <div style="white-space:pre-wrap;margin-top:6px">🏠 <span id="cust-address"></span></div>
+        <div id="cust-note-box" style="display:none;margin-top:6px">📝 <span id="cust-note"></span></div>
+      </div>
+      <div class="row-2" style="margin-top:14px">
+        <button class="btn" onclick="copyTrackLink()">🔗 คัดลอกลิงก์</button>
+        <a class="btn line" href="https://line.me/R/ti/p/%40863tjnsq" target="_blank">💬 LINE OA</a>
+      </div>
+      <div class="note">บันทึกลิงก์นี้ไว้เพื่อกลับมาดูสถานะออเดอร์ได้ตลอด</div>
+    </div>
+  </div>
+
+  <!-- Recover form (shown when no params or 404) -->
+  <div id="recover" class="recover" style="display:none">
+    <h2 style="font-family:'Playfair Display',serif;font-size:18px;font-weight:500;margin-bottom:8px">ลืมลิงก์ออเดอร์?</h2>
+    <div class="muted" style="margin-bottom:10px">กรอก Order ID + เบอร์โทร 4 ตัวสุดท้าย</div>
+    <div class="err-box" id="rec-err"></div>
+    <input type="text" id="rec-id" placeholder="CL2504301230XXX" maxlength="30" autocomplete="off">
+    <input type="text" id="rec-l4" placeholder="เบอร์โทร 4 ตัวสุดท้าย" maxlength="4" inputmode="numeric" autocomplete="off">
+    <button class="btn primary" id="rec-btn" onclick="doRecover()">ค้นหาออเดอร์</button>
+  </div>
+
+  <div class="toast" id="toast"></div>
+</div>
+
+<script>
+const API = 'https://casuallook-bot.iceamonwat.workers.dev';
+const STATUSES = [
+  {key:'pending',     label:'รอชำระเงิน',       icon:'1'},
+  {key:'production',  label:'ระหว่างการผลิต',   icon:'2'},
+  {key:'shipping',    label:'จัดส่ง',           icon:'3'},
+  {key:'delivered',   label:'ได้รับสินค้า',     icon:'4'},
+];
+
+function qs(k){ return new URLSearchParams(location.search).get(k); }
+function showToast(m){ const t=document.getElementById('toast'); t.textContent=m; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),1800); }
+function copyText(s,msg){ navigator.clipboard.writeText(s).then(()=>showToast(msg||'คัดลอกแล้ว')).catch(()=>showToast('คัดลอกไม่สำเร็จ')); }
+function copyTrackLink(){ copyText(location.href,'คัดลอกลิงก์ออเดอร์แล้ว'); }
+function fmtDate(ts){
+  if(!ts) return '—';
+  const d=new Date(ts);
+  return d.toLocaleString('th-TH',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
+}
+
+async function load(){
+  const id=qs('id'); const t=qs('t');
+  if(!id||!t){
+    document.getElementById('loading').style.display='none';
+    document.getElementById('recover').style.display='block';
+    return;
+  }
+  try{
+    const r=await fetch(`${API}/orders/${encodeURIComponent(id)}?t=${encodeURIComponent(t)}`);
+    const j=await r.json();
+    if(!r.ok||!j.ok){
+      document.getElementById('loading').style.display='none';
+      document.getElementById('recover').style.display='block';
+      const ebox=document.getElementById('rec-err');
+      ebox.textContent='ไม่พบออเดอร์ หรือลิงก์ไม่ถูกต้อง — ลองค้นหาด้านล่าง';
+      ebox.classList.add('show');
+      return;
+    }
+    render(j.order);
+  }catch(e){
+    document.getElementById('loading').style.display='none';
+    const ebox=document.getElementById('err-box');
+    ebox.textContent='เกิดข้อผิดพลาด: '+e.message;
+    ebox.classList.add('show');
+    document.getElementById('content').style.display='block';
+  }
+}
+
+let __order=null;
+
+function render(order){
+  __order=order;
+  document.getElementById('loading').style.display='none';
+  document.getElementById('content').style.display='block';
+  document.getElementById('oid').textContent=order.id;
+  document.getElementById('created').textContent=fmtDate(order.createdAt);
+  document.getElementById('total').textContent=Number(order.total).toLocaleString();
+
+  const tl=document.getElementById('timeline');
+  const cur=STATUSES.findIndex(s=>s.key===order.status);
+  tl.innerHTML='';
+  STATUSES.forEach((s,i)=>{
+    const cls=i<cur?'done':(i===cur?'current done':'');
+    const last=order.history && order.history.find(h=>h.status===s.key);
+    const meta=last?fmtDate(last.at):'';
+    tl.insertAdjacentHTML('beforeend',
+      `<div class="tl-row ${cls}">
+        <div class="tl-dot">${i<cur?'✓':s.icon}</div>
+        <div class="tl-text">
+          <div class="tl-label">${s.label}</div>
+          <div class="tl-meta">${meta}</div>
+        </div>
+      </div>`);
+  });
+
+  if(order.tracking){
+    document.getElementById('tracking-box').style.display='block';
+    document.getElementById('tracking-no').textContent=order.tracking;
+  }
+
+  if(order.status==='pending'){
+    document.getElementById('pay-card').style.display='block';
+    document.getElementById('qr-amount').textContent=Number(order.total).toLocaleString();
+    document.getElementById('qr-img').src=`${API}/promptpay/qr?amount=${order.total}&id=${encodeURIComponent(order.id)}`;
+  }
+
+  if(order.slipUrl){
+    document.getElementById('slip-card').style.display='block';
+    document.getElementById('slip-img').src=order.slipUrl;
+  }
+
+  const items=document.getElementById('items');
+  items.innerHTML='';
+  (order.items||[]).forEach(it=>{
+    items.insertAdjacentHTML('beforeend',
+      `<div class="item"><span class="l">${it.label}</span><span>฿${Number(it.amount).toLocaleString()}</span></div>`);
+  });
+
+  if(order.designUrl){
+    const img=document.getElementById('design-img');
+    img.src=order.designUrl; img.style.display='block';
+  }else{
+    document.getElementById('no-design').style.display='block';
+  }
+
+  document.getElementById('cust-name').textContent=order.customer.name;
+  document.getElementById('cust-phone').textContent=order.customer.phone;
+  document.getElementById('cust-address').textContent=order.customer.address;
+  if(order.customer.note){
+    document.getElementById('cust-note-box').style.display='block';
+    document.getElementById('cust-note').textContent=order.customer.note;
+  }
+}
+
+async function uploadSlip(ev){
+  const file=ev.target.files[0]; if(!file) return;
+  if(file.size > 8*1024*1024){ showToast('ไฟล์ใหญ่เกิน 8MB'); return; }
+  showToast('กำลังอัปโหลดสลิป...');
+  const reader=new FileReader();
+  reader.onload=async ()=>{
+    try{
+      const r=await fetch(`${API}/orders/${encodeURIComponent(__order.id)}/slip`,{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({token:qs('t'),slipDataUrl:reader.result}),
+      });
+      const j=await r.json();
+      if(!r.ok||!j.ok) throw new Error(j.error||'upload failed');
+      showToast('ส่งสลิปสำเร็จ ✓');
+      __order.slipUrl=j.slipUrl;
+      document.getElementById('slip-card').style.display='block';
+      document.getElementById('slip-img').src=j.slipUrl;
+    }catch(e){
+      showToast('อัปโหลดไม่สำเร็จ: '+e.message);
+    }
+  };
+  reader.readAsDataURL(file);
+}
+
+async function doRecover(){
+  const id=document.getElementById('rec-id').value.trim().toUpperCase();
+  const l4=document.getElementById('rec-l4').value.trim();
+  const ebox=document.getElementById('rec-err');
+  ebox.classList.remove('show');
+  if(!id || l4.length!==4){ ebox.textContent='กรอก Order ID และเบอร์ 4 ตัวสุดท้าย'; ebox.classList.add('show'); return; }
+  document.getElementById('rec-btn').disabled=true;
+  try{
+    const r=await fetch(`${API}/orders/recover`,{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({id,last4:l4}),
+    });
+    const j=await r.json();
+    if(!r.ok||!j.ok){ ebox.textContent='ไม่พบออเดอร์'; ebox.classList.add('show'); return; }
+    location.href=`track.html?id=${encodeURIComponent(j.id)}&t=${encodeURIComponent(j.token)}`;
+  }catch(e){
+    ebox.textContent='ผิดพลาด: '+e.message; ebox.classList.add('show');
+  }finally{
+    document.getElementById('rec-btn').disabled=false;
+  }
+}
+
+load();
+</script>
+</body>
+</html>

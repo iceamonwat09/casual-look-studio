@@ -1,0 +1,17 @@
+name = "casuallook-bot"
+main = "worker.js"
+compatibility_date = "2025-01-01"
+
+# KV binding — create via dashboard or `wrangler kv:namespace create ORDERS`
+# then either replace the id below, OR just bind it via dashboard (Settings → Bindings)
+[[kv_namespaces]]
+binding = "ORDERS"
+id = "REPLACE_WITH_KV_ID_OR_BIND_VIA_DASHBOARD"
+
+# Secrets are NOT defined here — set them in Cloudflare dashboard
+# (Settings → Variables and Secrets) or via CLI:
+#   wrangler secret put LINE_ACCESS_TOKEN
+#   wrangler secret put LINE_GROUP_ID
+#   wrangler secret put PROMPTPAY_TARGET
+#   wrangler secret put IMGBB_API_KEY
+#   wrangler secret put ADMIN_PASSWORD

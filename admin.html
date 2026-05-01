@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Admin — Casual Look</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500&family=DM+Sans:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --cream:#F8F5F0;--warm:#FDFBF8;--stone:#9A8F85;
+  --char:#1E1C1A;--accent:#C9956B;--alight:#F0E3D6;
+  --gold:#B8864C;--bd:rgba(30,28,26,.09);--bd-strong:rgba(30,28,26,.14);
+  --line:#06C755;
+  --st-pending:#c08436;--st-pending-bg:#fdf1e2;
+  --st-prod:#5b8def;--st-prod-bg:#e9efff;
+  --st-ship:#8b5cf6;--st-ship-bg:#f0e9fe;
+  --st-done:#2e8b57;--st-done-bg:#e6f5ec;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{
+  background:var(--cream);min-height:100vh;color:var(--char);
+  font-family:'DM Sans',sans-serif;padding:14px;
+}
+.shell{max-width:1400px;margin:0 auto}
+.head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+.head h1{font-family:'Playfair Display',serif;font-size:24px;font-weight:500}
+.head .sub{font-size:9px;color:var(--accent);letter-spacing:3px;text-transform:uppercase}
+.head .right{display:flex;gap:8px;align-items:center}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;height:38px;padding:0 14px;border-radius:9px;border:.5px solid var(--bd-strong);background:var(--warm);color:var(--char);font-size:11.5px;letter-spacing:1.2px;text-transform:uppercase;font-weight:500;cursor:pointer;font-family:inherit;transition:transform .12s,background .15s;text-decoration:none}
+.btn:active{transform:scale(.97)}
+.btn.primary{background:var(--char);color:var(--warm);border-color:var(--char)}
+.btn.gold{background:linear-gradient(135deg,var(--accent),var(--gold));color:#fff;border-color:var(--gold)}
+.btn.danger{background:#fdecec;border-color:#f5c6c6;color:#c0392b}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+
+/* LOGIN */
+.login{max-width:380px;margin:8vh auto 0;background:var(--warm);padding:28px 24px;border-radius:18px;border:.5px solid var(--bd);box-shadow:0 4px 20px rgba(30,28,26,.06)}
+.login h1{font-family:'Playfair Display',serif;font-size:24px;text-align:center;margin-bottom:4px}
+.login .sub{text-align:center;color:var(--stone);font-size:11px;letter-spacing:2px;text-transform:uppercase;margin-bottom:20px}
+.login input{width:100%;padding:12px 14px;border:.5px solid var(--bd-strong);border-radius:11px;background:var(--cream);font-size:14px;font-family:inherit;outline:none;margin-bottom:10px}
+.login input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(201,149,107,.18)}
+.login .err{color:#c0392b;font-size:12px;margin-top:6px;display:none}
+.login .err.show{display:block}
+
+/* STATS */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:14px}
+.stat{background:var(--warm);border:.5px solid var(--bd);border-radius:14px;padding:14px}
+.stat .lbl{font-size:9.5px;letter-spacing:2px;text-transform:uppercase;color:var(--stone)}
+.stat .val{font-family:'Playfair Display',serif;font-size:26px;font-weight:500;margin-top:4px}
+.stat.gold .val{color:var(--gold)}
+.stat.warn .val{color:var(--st-pending)}
+
+/* CHIPS */
+.filters{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.chip{padding:6px 12px;border-radius:20px;border:.5px solid var(--bd-strong);background:var(--warm);font-size:11px;letter-spacing:.5px;cursor:pointer;font-family:inherit;color:var(--char);transition:all .15s}
+.chip.active{background:var(--char);color:var(--warm);border-color:var(--char)}
+.search{flex:1;min-width:180px;padding:8px 12px;border-radius:9px;border:.5px solid var(--bd-strong);background:var(--warm);font-size:12.5px;font-family:inherit;outline:none;height:38px}
+.search:focus{border-color:var(--accent)}
+
+/* TABLE (DESKTOP) */
+.table{background:var(--warm);border-radius:14px;border:.5px solid var(--bd);overflow:hidden}
+.table-row{display:grid;grid-template-columns:120px 1.6fr 100px 110px 130px 100px;gap:10px;padding:12px 14px;align-items:center;border-bottom:.5px solid var(--bd);font-size:12.5px;cursor:pointer;transition:background .12s}
+.table-row.head{background:var(--cream);font-size:9.5px;letter-spacing:1.6px;text-transform:uppercase;color:var(--stone);font-weight:500;cursor:default}
+.table-row:hover:not(.head){background:var(--cream)}
+.table-row .id{font-weight:500;color:var(--gold)}
+.table-row .total{font-family:'Playfair Display',serif;font-size:15px;color:var(--gold);font-weight:500}
+.status-badge{display:inline-block;padding:4px 10px;border-radius:14px;font-size:10.5px;letter-spacing:.5px;font-weight:500;text-align:center;white-space:nowrap}
+.status-pending{background:var(--st-pending-bg);color:var(--st-pending)}
+.status-production{background:var(--st-prod-bg);color:var(--st-prod)}
+.status-shipping{background:var(--st-ship-bg);color:var(--st-ship)}
+.status-delivered{background:var(--st-done-bg);color:var(--st-done)}
+
+/* DETAIL DRAWER */
+.drawer-bg{position:fixed;inset:0;background:rgba(30,28,26,.45);z-index:50;display:none;backdrop-filter:blur(2px)}
+.drawer-bg.show{display:block}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:520px;max-width:96vw;background:var(--warm);z-index:51;transform:translateX(100%);transition:transform .25s ease;overflow-y:auto;box-shadow:-12px 0 40px rgba(30,28,26,.18)}
+.drawer.show{transform:translateX(0)}
+.drawer-head{position:sticky;top:0;background:var(--warm);padding:18px 20px;border-bottom:.5px solid var(--bd);display:flex;align-items:center;justify-content:space-between;z-index:5}
+.drawer-head h2{font-family:'Playfair Display',serif;font-size:20px;font-weight:500}
+.drawer-body{padding:18px 20px}
+.section{margin-bottom:18px;padding-bottom:14px;border-bottom:.5px dashed var(--bd-strong)}
+.section:last-child{border-bottom:0}
+.section h3{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--stone);margin-bottom:8px}
+.kv{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;padding:4px 0;font-size:13px}
+.kv .l{color:var(--stone);min-width:80px}
+.kv .r{flex:1;text-align:right;word-break:break-word;white-space:pre-wrap}
+.copy-btn{font-size:10.5px;color:var(--accent);background:none;border:none;cursor:pointer;padding:2px 4px;text-decoration:underline;font-family:inherit;margin-left:6px}
+.status-btns{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:10px}
+.s-btn{padding:10px;border-radius:9px;border:.5px solid var(--bd-strong);background:var(--cream);font-size:11px;font-family:inherit;cursor:pointer;letter-spacing:.5px;text-align:left}
+.s-btn.active{background:var(--char);color:var(--warm);border-color:var(--char)}
+.s-btn:disabled{opacity:.5;cursor:not-allowed}
+.section input,.section textarea{width:100%;padding:10px 12px;border:.5px solid var(--bd-strong);border-radius:9px;font-size:13px;font-family:inherit;background:var(--cream);outline:none;margin-bottom:6px}
+.section textarea{resize:vertical;min-height:60px}
+.section input:focus,.section textarea:focus{border-color:var(--accent)}
+.thumb{width:100%;border-radius:10px;border:.5px solid var(--bd);background:#fff;display:block;margin-top:6px;cursor:zoom-in}
+.empty{text-align:center;padding:50px 20px;color:var(--stone)}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--char);color:var(--warm);padding:10px 18px;border-radius:24px;font-size:12.5px;opacity:0;transition:opacity .25s;pointer-events:none;z-index:200}
+.toast.show{opacity:1}
+.spinner{width:30px;height:30px;border:3px solid var(--bd-strong);border-top-color:var(--accent);border-radius:50%;animation:sp .8s linear infinite;margin:30px auto}
+@keyframes sp{to{transform:rotate(360deg)}}
+.lightbox{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:300;display:none;align-items:center;justify-content:center;padding:20px}
+.lightbox.show{display:flex}
+.lightbox img{max-width:96vw;max-height:92vh;border-radius:6px}
+.lightbox .x{position:absolute;top:14px;right:14px;background:rgba(255,255,255,.15);color:#fff;border:none;width:40px;height:40px;border-radius:50%;font-size:18px;cursor:pointer}
+
+/* RESPONSIVE — mobile/tablet */
+@media (max-width:900px){
+  .table-row{grid-template-columns:1fr;gap:6px;padding:14px;border-radius:12px;border:.5px solid var(--bd);background:var(--warm);margin-bottom:8px}
+  .table{background:transparent;border:0;overflow:visible}
+  .table-row.head{display:none}
+  .table-row .id::before{content:'Order: ';color:var(--stone);font-weight:400;font-size:11px}
+  .table-row .name::before{content:'ลูกค้า: ';color:var(--stone);font-size:11px;display:block}
+  .table-row .total::before{content:'฿';font-size:11px}
+  .table-row .total{font-size:18px}
+  .table-row .date::before{content:'📅 ';color:var(--stone)}
+  .drawer{width:100%}
+}
+@media (max-width:540px){
+  body{padding:10px}
+  .head h1{font-size:20px}
+  .stats{grid-template-columns:1fr 1fr}
+  .stat .val{font-size:22px}
+}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login" class="login">
+  <h1>Casual Look</h1>
+  <div class="sub">Admin Console</div>
+  <input type="password" id="pw" placeholder="รหัสผ่าน" autocomplete="current-password">
+  <button class="btn primary" style="width:100%;margin-top:6px" id="login-btn" onclick="doLogin()">เข้าสู่ระบบ</button>
+  <div class="err" id="login-err"></div>
+</div>
+
+<!-- DASHBOARD -->
+<div id="app" class="shell" style="display:none">
+  <div class="head">
+    <div>
+      <h1>Casual Look</h1>
+      <div class="sub">Admin · Order Console</div>
+    </div>
+    <div class="right">
+      <button class="btn" onclick="loadOrders()">↻ รีเฟรช</button>
+      <button class="btn danger" onclick="logout()">ออกจากระบบ</button>
+    </div>
+  </div>
+
+  <div class="stats" id="stats"></div>
+
+  <div class="filters">
+    <button class="chip active" data-f="" onclick="setFilter('')">ทั้งหมด</button>
+    <button class="chip" data-f="pending" onclick="setFilter('pending')">รอชำระ</button>
+    <button class="chip" data-f="production" onclick="setFilter('production')">ผลิต</button>
+    <button class="chip" data-f="shipping" onclick="setFilter('shipping')">จัดส่ง</button>
+    <button class="chip" data-f="delivered" onclick="setFilter('delivered')">ได้รับแล้ว</button>
+    <input type="text" id="q" class="search" placeholder="🔍 ค้นหา ID / ชื่อ / เบอร์ / ที่อยู่">
+  </div>
+
+  <div id="loading" class="spinner"></div>
+
+  <div id="table" class="table" style="display:none">
+    <div class="table-row head">
+      <div>Order ID</div>
+      <div>ลูกค้า</div>
+      <div>ยอด</div>
+      <div>สถานะ</div>
+      <div>วันที่</div>
+      <div></div>
+    </div>
+    <div id="rows"></div>
+  </div>
+
+  <div id="empty" class="empty" style="display:none">
+    <h2 style="font-family:'Playfair Display',serif">— ยังไม่มีออเดอร์ —</h2>
+  </div>
+</div>
+
+<!-- DETAIL DRAWER -->
+<div class="drawer-bg" id="drawer-bg" onclick="closeDrawer()"></div>
+<div class="drawer" id="drawer">
+  <div class="drawer-head">
+    <h2 id="d-title">Order</h2>
+    <button class="btn" onclick="closeDrawer()">✕ ปิด</button>
+  </div>
+  <div class="drawer-body" id="drawer-body">—</div>
+</div>
+
+<div class="lightbox" id="lightbox" onclick="this.classList.remove('show')">
+  <button class="x" onclick="event.stopPropagation();document.getElementById('lightbox').classList.remove('show')">✕</button>
+  <img id="lb-img">
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const API = 'https://casuallook-bot.iceamonwat.workers.dev';
+const STATUS_TH = { pending:'รอชำระเงิน', production:'ระหว่างการผลิต', shipping:'จัดส่ง', delivered:'ได้รับสินค้า' };
+const STATUS_FLOW = ['pending','production','shipping','delivered'];
+
+let __session = localStorage.getItem('cl_admin_session') || '';
+let __filter = '';
+let __orders = [];
+let __search = '';
+
+function showToast(m){ const t=document.getElementById('toast'); t.textContent=m; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),1800); }
+function copyText(s,msg){ navigator.clipboard.writeText(s).then(()=>showToast(msg||'คัดลอกแล้ว')); }
+function fmtDate(ts){
+  if(!ts) return '—';
+  const d=new Date(ts);
+  return d.toLocaleString('th-TH',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
+}
+function fmtRelative(ts){
+  if(!ts) return '—';
+  const diff=(Date.now()-ts)/1000;
+  if(diff<60) return 'เมื่อสักครู่';
+  if(diff<3600) return Math.floor(diff/60)+' นาทีที่แล้ว';
+  if(diff<86400) return Math.floor(diff/3600)+' ชั่วโมงที่แล้ว';
+  return fmtDate(ts);
+}
+
+function api(path,opts={}){
+  return fetch(API+path,{
+    ...opts,
+    headers:{
+      'Content-Type':'application/json',
+      'Authorization':'Bearer '+__session,
+      ...(opts.headers||{}),
+    },
+  }).then(async r=>{
+    if(r.status===401){ logout(); throw new Error('session expired'); }
+    const j=await r.json();
+    if(!r.ok||!j.ok) throw new Error(j.error||'request failed');
+    return j;
+  });
+}
+
+// ── login ──
+async function doLogin(){
+  const pw=document.getElementById('pw').value;
+  const err=document.getElementById('login-err');
+  err.classList.remove('show');
+  const btn=document.getElementById('login-btn');
+  btn.disabled=true; btn.textContent='กำลังตรวจสอบ...';
+  try{
+    const r=await fetch(API+'/admin/login',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({password:pw}),
+    });
+    const j=await r.json();
+    if(!r.ok||!j.ok) throw new Error(j.error||'login failed');
+    __session=j.sessionToken;
+    localStorage.setItem('cl_admin_session',__session);
+    document.getElementById('pw').value='';
+    showApp();
+  }catch(e){
+    err.textContent='เข้าสู่ระบบไม่สำเร็จ: '+e.message;
+    err.classList.add('show');
+  }finally{
+    btn.disabled=false; btn.textContent='เข้าสู่ระบบ';
+  }
+}
+
+function logout(){
+  __session='';
+  localStorage.removeItem('cl_admin_session');
+  document.getElementById('app').style.display='none';
+  document.getElementById('login').style.display='block';
+}
+
+document.getElementById('pw').addEventListener('keydown',e=>{ if(e.key==='Enter') doLogin(); });
+
+function showApp(){
+  document.getElementById('login').style.display='none';
+  document.getElementById('app').style.display='block';
+  loadOrders();
+}
+
+// ── orders ──
+function setFilter(f){
+  __filter=f;
+  document.querySelectorAll('.chip').forEach(c=>{
+    c.classList.toggle('active', c.dataset.f===f);
+  });
+  loadOrders();
+}
+
+document.getElementById('q')?.addEventListener('input',e=>{
+  __search=e.target.value;
+  clearTimeout(window.__qt);
+  window.__qt=setTimeout(loadOrders,300);
+});
+
+async function loadOrders(){
+  document.getElementById('loading').style.display='block';
+  document.getElementById('table').style.display='none';
+  document.getElementById('empty').style.display='none';
+  try{
+    const params=new URLSearchParams();
+    if(__filter) params.set('status',__filter);
+    if(__search) params.set('q',__search);
+    const j=await api('/admin/orders?'+params.toString());
+    __orders=j.orders;
+    renderStats(j.stats);
+    renderTable(j.orders);
+  }catch(e){
+    if(e.message!=='session expired') showToast('โหลดไม่สำเร็จ: '+e.message);
+  }finally{
+    document.getElementById('loading').style.display='none';
+  }
+}
+
+function renderStats(st){
+  const html=[
+    ['ทั้งหมด', st.total, ''],
+    ['รอชำระเงิน', st.pending, 'warn'],
+    ['ระหว่างผลิต', st.production, ''],
+    ['กำลังจัดส่ง', st.shipping, ''],
+    ['วันนี้', st.todayCount, ''],
+    ['ยอดรวม (รับเงิน)', '฿'+(st.revenuePaid||0).toLocaleString(), 'gold'],
+  ].map(([l,v,c])=>`<div class="stat ${c}"><div class="lbl">${l}</div><div class="val">${v}</div></div>`).join('');
+  document.getElementById('stats').innerHTML=html;
+}
+
+function renderTable(orders){
+  const rows=document.getElementById('rows');
+  if(!orders.length){
+    document.getElementById('empty').style.display='block';
+    rows.innerHTML=''; return;
+  }
+  document.getElementById('table').style.display='block';
+  rows.innerHTML=orders.map(o=>`
+    <div class="table-row" onclick="openOrder('${o.id}')">
+      <div class="id">${o.id}</div>
+      <div class="name">${escapeHtml(o.customer.name)} · ${escapeHtml(o.customer.phone)}</div>
+      <div class="total">${Number(o.total).toLocaleString()}</div>
+      <div><span class="status-badge status-${o.status}">${STATUS_TH[o.status]}</span></div>
+      <div class="date">${fmtRelative(o.createdAt)}</div>
+      <div style="text-align:right">
+        ${o.slipUrl?'💳':''} ${o.tracking?'📦':''}
+      </div>
+    </div>`).join('');
+}
+
+function escapeHtml(s){ return String(s||'').replace(/[&<>"']/g,c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c])); }
+
+// ── drawer ──
+let __open=null;
+
+async function openOrder(id){
+  document.getElementById('drawer-bg').classList.add('show');
+  document.getElementById('drawer').classList.add('show');
+  document.getElementById('drawer-body').innerHTML='<div class="spinner"></div>';
+  document.getElementById('d-title').textContent='Order '+id;
+  try{
+    const j=await api('/admin/orders/'+encodeURIComponent(id));
+    __open=j.order;
+    renderDetail(j.order, j.customerLink);
+  }catch(e){
+    document.getElementById('drawer-body').innerHTML='<div class="empty">โหลดไม่สำเร็จ</div>';
+  }
+}
+
+function closeDrawer(){
+  document.getElementById('drawer-bg').classList.remove('show');
+  document.getElementById('drawer').classList.remove('show');
+  __open=null;
+}
+
+function renderDetail(o, custLink){
+  const itemRows=(o.items||[]).map(it=>`<div class="kv"><span class="l">${escapeHtml(it.label)}</span><span class="r">฿${Number(it.amount).toLocaleString()}</span></div>`).join('');
+  const histRows=(o.history||[]).slice().reverse().map(h=>`<div class="kv"><span class="l">${fmtDate(h.at)}</span><span class="r">${STATUS_TH[h.status]||h.status} · ${h.by||'-'}${h.event?(' · '+h.event):''}</span></div>`).join('');
+
+  const idx=STATUS_FLOW.indexOf(o.status);
+  const next=STATUS_FLOW[idx+1];
+
+  document.getElementById('drawer-body').innerHTML=`
+    <div class="section">
+      <h3>สถานะ</h3>
+      <div style="margin-bottom:8px"><span class="status-badge status-${o.status}">${STATUS_TH[o.status]}</span> · อัปเดตล่าสุด ${fmtDate(o.updatedAt)}</div>
+      <div class="status-btns">
+        ${STATUS_FLOW.map(s=>`<button class="s-btn ${s===o.status?'active':''}" onclick="updateStatus('${s}')">${STATUS_TH[s]}</button>`).join('')}
+      </div>
+      ${next?`<button class="btn primary" style="width:100%;margin-top:8px" onclick="updateStatus('${next}')">→ ${STATUS_TH[next]}</button>`:''}
+    </div>
+
+    <div class="section">
+      <h3>ลูกค้า</h3>
+      <div class="kv"><span class="l">ชื่อ</span><span class="r">${escapeHtml(o.customer.name)} <button class="copy-btn" onclick="copyText(${JSON.stringify(o.customer.name)},'คัดลอกชื่อแล้ว')">[copy]</button></span></div>
+      <div class="kv"><span class="l">เบอร์</span><span class="r">${escapeHtml(o.customer.phone)} <button class="copy-btn" onclick="copyText(${JSON.stringify(o.customer.phone)},'คัดลอกเบอร์แล้ว')">[copy]</button> <a class="copy-btn" href="tel:${escapeHtml(o.customer.phone)}">[โทร]</a></span></div>
+      <div class="kv"><span class="l">ที่อยู่</span><span class="r">${escapeHtml(o.customer.address)} <button class="copy-btn" onclick="copyText(${JSON.stringify(o.customer.address)},'คัดลอกที่อยู่แล้ว')">[copy]</button></span></div>
+      ${o.customer.note?`<div class="kv"><span class="l">หมายเหตุ</span><span class="r">${escapeHtml(o.customer.note)}</span></div>`:''}
+    </div>
+
+    <div class="section">
+      <h3>รายการ</h3>
+      ${itemRows}
+      <div class="kv" style="border-top:.5px solid var(--bd);padding-top:8px;margin-top:6px"><span class="l"><b>รวม</b></span><span class="r" style="color:var(--gold);font-family:'Playfair Display',serif;font-size:18px">฿${Number(o.total).toLocaleString()}</span></div>
+    </div>
+
+    <div class="section">
+      <h3>ดีไซน์</h3>
+      ${o.designUrl?`<img class="thumb" src="${o.designUrl}" onclick="openLightbox('${o.designUrl}')">`:'<div class="empty" style="padding:20px">— ไม่มีภาพดีไซน์ —</div>'}
+    </div>
+
+    <div class="section">
+      <h3>สลิป</h3>
+      ${o.slipUrl?`<img class="thumb" src="${o.slipUrl}" onclick="openLightbox('${o.slipUrl}')">`:'<div class="empty" style="padding:20px">— ลูกค้ายังไม่ได้ส่งสลิป —</div>'}
+    </div>
+
+    <div class="section">
+      <h3>เลขพัสดุ</h3>
+      <input type="text" id="d-tracking" value="${escapeHtml(o.tracking||'')}" placeholder="เช่น TH1234567890">
+      <button class="btn" style="width:100%" onclick="saveTracking()">บันทึกเลขพัสดุ</button>
+    </div>
+
+    <div class="section">
+      <h3>หมายเหตุภายใน (admin)</h3>
+      <textarea id="d-note">${escapeHtml(o.adminNote||'')}</textarea>
+      <button class="btn" style="width:100%" onclick="saveNote()">บันทึกหมายเหตุ</button>
+    </div>
+
+    <div class="section">
+      <h3>ลิงก์ลูกค้า</h3>
+      <div style="font-size:11.5px;word-break:break-all;color:var(--stone);background:var(--cream);padding:10px;border-radius:8px;margin-bottom:8px">${location.origin}${location.pathname.replace('admin.html','')}${custLink}</div>
+      <button class="btn gold" style="width:100%" onclick="copyText('${location.origin}${location.pathname.replace('admin.html','')}${custLink}','คัดลอกลิงก์ลูกค้าแล้ว')">คัดลอกลิงก์ลูกค้า</button>
+    </div>
+
+    <div class="section">
+      <h3>ประวัติ</h3>
+      ${histRows||'<div class="empty" style="padding:10px">—</div>'}
+    </div>
+  `;
+}
+
+async function updateStatus(s){
+  if(!__open) return;
+  if(s===__open.status){ showToast('สถานะนี้อยู่แล้ว'); return; }
+  if(!confirm(`ยืนยันเปลี่ยนเป็น "${STATUS_TH[s]}"?`)) return;
+  try{
+    const j=await api('/admin/orders/'+encodeURIComponent(__open.id),{method:'PATCH',body:JSON.stringify({status:s})});
+    showToast('อัปเดตสถานะแล้ว');
+    __open=j.order;
+    renderDetail(j.order, '/track.html?id='+encodeURIComponent(j.order.id)+'&t='+(__open.token||''));
+    loadOrders();
+  }catch(e){ showToast('ผิดพลาด: '+e.message); }
+}
+
+async function saveTracking(){
+  if(!__open) return;
+  const tracking=document.getElementById('d-tracking').value.trim();
+  try{
+    const j=await api('/admin/orders/'+encodeURIComponent(__open.id),{method:'PATCH',body:JSON.stringify({tracking})});
+    showToast('บันทึกเลขพัสดุแล้ว');
+    __open=j.order;
+    loadOrders();
+  }catch(e){ showToast('ผิดพลาด: '+e.message); }
+}
+
+async function saveNote(){
+  if(!__open) return;
+  const adminNote=document.getElementById('d-note').value;
+  try{
+    const j=await api('/admin/orders/'+encodeURIComponent(__open.id),{method:'PATCH',body:JSON.stringify({adminNote})});
+    showToast('บันทึกหมายเหตุแล้ว');
+    __open=j.order;
+  }catch(e){ showToast('ผิดพลาด: '+e.message); }
+}
+
+function openLightbox(url){
+  document.getElementById('lb-img').src=url;
+  document.getElementById('lightbox').classList.add('show');
+}
+
+// init
+if(__session){ showApp(); }
+</script>
+</body>
+</html>
