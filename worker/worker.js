@@ -231,6 +231,31 @@ async function getIndex(env) {
   return raw ? JSON.parse(raw) : [];
 }
 
+// Device-based history (per-browser device id, stored in customer's localStorage)
+async function appendDeviceIndex(env, deviceId, summary) {
+  if (!deviceId) return;
+  const key = `device:${deviceId}`;
+  const raw = await env.ORDERS.get(key);
+  const arr = raw ? JSON.parse(raw) : [];
+  // de-dup by id
+  const idx = arr.findIndex(x => x.id === summary.id);
+  if (idx >= 0) arr.splice(idx, 1);
+  arr.unshift(summary);
+  await env.ORDERS.put(key, JSON.stringify(arr.slice(0, 50)));
+}
+
+async function updateDeviceIndexStatus(env, deviceId, orderId, patch) {
+  if (!deviceId) return;
+  const key = `device:${deviceId}`;
+  const raw = await env.ORDERS.get(key);
+  if (!raw) return;
+  const arr = JSON.parse(raw);
+  const idx = arr.findIndex(x => x.id === orderId);
+  if (idx < 0) return;
+  arr[idx] = { ...arr[idx], ...patch };
+  await env.ORDERS.put(key, JSON.stringify(arr));
+}
+
 async function checkAdminSession(env, request) {
   const auth = request.headers.get('Authorization') || '';
   const m = auth.match(/^Bearer\s+(.+)$/);
@@ -255,6 +280,7 @@ async function handleCreateOrder(request, env) {
   })) : [];
   const total = Math.max(0, Math.floor(Number(body.total) || 0));
   const designDataUrl = typeof body.designDataUrl === 'string' ? body.designDataUrl : '';
+  const deviceId = sanitize(body.deviceId || '', 64);
 
   if (!name) return err(400, 'name required');
   if (!phone || phone.replace(/\D/g, '').length < 9) return err(400, 'phone invalid');
@@ -286,6 +312,7 @@ async function handleCreateOrder(request, env) {
     slipUrl: '',
     tracking: '',
     adminNote: '',
+    deviceId,
     history: [{ at: now, status: 'pending', by: 'system' }],
     createdAt: now,
     updatedAt: now,
@@ -294,11 +321,26 @@ async function handleCreateOrder(request, env) {
   await putOrder(env, order);
   await appendIndex(env, order);
   await env.ORDERS.put(`recover:${id}:${last4(phone)}`, id);
+  await appendDeviceIndex(env, deviceId, {
+    id, token, total, status: 'pending',
+    itemCount: items.length,
+    designUrl,
+    createdAt: now,
+  });
 
   // LINE notify (don't block response on failure)
   await linePush(env, lineOrderCreatedMessage(order));
 
   return json({ ok: true, id, token, status: order.status });
+}
+
+async function handleByDevice(request, env) {
+  const url = new URL(request.url);
+  const did = sanitize(url.searchParams.get('did') || '', 64);
+  if (!did) return err(400, 'did required');
+  const raw = await env.ORDERS.get(`device:${did}`);
+  const orders = raw ? JSON.parse(raw) : [];
+  return json({ ok: true, orders });
 }
 
 async function handleGetOrderPublic(request, env, id) {
@@ -444,6 +486,15 @@ async function handleAdminPatchOrder(request, env, id) {
   order.history.push({ at: order.updatedAt, status: order.status, by: 'admin', tracking: order.tracking });
   await putOrder(env, order);
 
+  // Keep device-history index in sync for the customer's home page
+  if (order.deviceId) {
+    await updateDeviceIndexStatus(env, order.deviceId, order.id, {
+      status: order.status,
+      tracking: order.tracking,
+      updatedAt: order.updatedAt,
+    });
+  }
+
   if (body.status && body.status !== prev) {
     await linePush(env, lineStatusUpdateMessage(order, prev));
   }
@@ -486,6 +537,7 @@ export default {
 
       if (path === '/orders' && request.method === 'POST') return handleCreateOrder(request, env);
       if (path === '/orders/recover' && request.method === 'POST') return handleRecover(request, env);
+      if (path === '/orders/by-device' && request.method === 'GET') return handleByDevice(request, env);
 
       let m = path.match(/^\/orders\/([A-Z0-9-]{4,40})$/);
       if (m && request.method === 'GET') return handleGetOrderPublic(request, env, m[1]);
