@@ -65,6 +65,16 @@ body{
 .empty h2{font-family:'Playfair Display',serif;font-size:22px;color:var(--char);margin-bottom:8px}
 .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--char);color:var(--warm);padding:10px 18px;border-radius:24px;font-size:12.5px;opacity:0;transition:opacity .25s;pointer-events:none;z-index:100}
 .toast.show{opacity:1}
+.modal-bg{position:fixed;inset:0;background:rgba(30,28,26,.55);z-index:200;display:none;align-items:center;justify-content:center;padding:18px;backdrop-filter:blur(3px)}
+.modal-bg.show{display:flex}
+.modal-card{background:var(--warm);border-radius:18px;padding:26px 22px;max-width:380px;width:100%;text-align:center;box-shadow:0 20px 60px rgba(30,28,26,.25);animation:popIn .25s ease}
+@keyframes popIn{from{opacity:0;transform:scale(.9) translateY(8px)}to{opacity:1;transform:scale(1) translateY(0)}}
+.modal-icon{width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,var(--ok),#48a76e);color:#fff;display:flex;align-items:center;justify-content:center;font-size:30px;margin:0 auto 12px;box-shadow:0 6px 18px rgba(46,139,87,.3);animation:bounce .5s ease .1s both}
+@keyframes bounce{0%{transform:scale(0)}60%{transform:scale(1.15)}100%{transform:scale(1)}}
+.modal-title{font-family:'Playfair Display',serif;font-size:22px;font-weight:500;margin-bottom:6px}
+.modal-msg{font-size:13px;color:var(--stone);line-height:1.6;margin-bottom:18px}
+.modal-card .btn{width:100%}
+.modal-card .row-2{margin-top:8px}
 .err-box{background:#fdecec;border:.5px solid #f5c6c6;color:#c0392b;padding:10px 12px;border-radius:10px;font-size:12.5px;margin-bottom:10px;display:none}
 .err-box.show{display:block}
 .spinner{width:30px;height:30px;border:3px solid var(--bd-strong);border-top-color:var(--accent);border-radius:50%;animation:sp 0.8s linear infinite;margin:30px auto}
@@ -171,6 +181,32 @@ body{
   </div>
 
   <div class="toast" id="toast"></div>
+
+  <!-- Slip upload progress modal -->
+  <div class="modal-bg" id="slip-progress">
+    <div class="modal-card">
+      <div class="spinner" style="margin:6px auto 14px"></div>
+      <div class="modal-title">กำลังอัปโหลดสลิป</div>
+      <div class="modal-msg">รอสักครู่...</div>
+    </div>
+  </div>
+
+  <!-- Slip upload success modal -->
+  <div class="modal-bg" id="slip-success">
+    <div class="modal-card">
+      <div class="modal-icon">✓</div>
+      <div class="modal-title">ส่งสลิปสำเร็จ</div>
+      <div class="modal-msg">
+        ทีมงานได้รับสลิปของคุณแล้ว<br>
+        เราจะตรวจสอบและเปลี่ยนสถานะออเดอร์เป็น<br><b style="color:var(--char)">"ระหว่างการผลิต"</b> เร็วที่สุด
+      </div>
+      <button class="btn primary" onclick="document.getElementById('slip-success').classList.remove('show')">ตกลง</button>
+      <div class="row-2">
+        <a class="btn line" href="https://line.me/R/ti/p/%40863tjnsq" target="_blank">💬 ทักหา LINE</a>
+        <button class="btn" onclick="location.reload()">↻ รีเฟรช</button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -288,8 +324,9 @@ function render(order){
 
 async function uploadSlip(ev){
   const file=ev.target.files[0]; if(!file) return;
+  ev.target.value=''; // allow re-selecting same file later
   if(file.size > 8*1024*1024){ showToast('ไฟล์ใหญ่เกิน 8MB'); return; }
-  showToast('กำลังอัปโหลดสลิป...');
+  document.getElementById('slip-progress').classList.add('show');
   const reader=new FileReader();
   reader.onload=async ()=>{
     try{
@@ -300,13 +337,19 @@ async function uploadSlip(ev){
       });
       const j=await r.json();
       if(!r.ok||!j.ok) throw new Error(j.error||'upload failed');
-      showToast('ส่งสลิปสำเร็จ ✓');
       __order.slipUrl=j.slipUrl;
       document.getElementById('slip-card').style.display='block';
       document.getElementById('slip-img').src=j.slipUrl;
+      document.getElementById('slip-progress').classList.remove('show');
+      document.getElementById('slip-success').classList.add('show');
     }catch(e){
+      document.getElementById('slip-progress').classList.remove('show');
       showToast('อัปโหลดไม่สำเร็จ: '+e.message);
     }
+  };
+  reader.onerror=()=>{
+    document.getElementById('slip-progress').classList.remove('show');
+    showToast('อ่านไฟล์ไม่สำเร็จ');
   };
   reader.readAsDataURL(file);
 }
