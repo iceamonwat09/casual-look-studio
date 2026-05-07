@@ -2,9 +2,16 @@
 <html lang="th">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
+<meta name="theme-color" content="#FDFBF8">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Casual Look">
 <title>Casual Look — Cardigan Studio</title>
 <meta name="description" content="ออกแบบเสื้อ Cardigan ในแบบของคุณ — เลือกสี, สติ๊กเกอร์, ตัวอักษร แล้วสั่งทำส่งถึงบ้าน">
+<meta property="og:title" content="Casual Look — Cardigan Studio">
+<meta property="og:description" content="ออกแบบเสื้อในแบบของคุณ เริ่มต้นง่าย ส่งถึงบ้าน">
+<meta property="og:type" content="website">
 <link rel="icon" href="data:image/svg+xml;utf8,&lt;svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22&gt;&lt;text y=%22.9em%22 font-size=%2290%22&gt;✦&lt;/text&gt;&lt;/svg&gt;">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;1,400&family=DM+Sans:wght@300;400;500;700&display=swap" rel="stylesheet">
 <!-- GA4 -->
@@ -43,12 +50,14 @@ a{color:inherit;text-decoration:none}
   66%{transform:translate(-30px,40px) scale(.95)}
 }
 
-/* ── nav ── */
-.nav{position:relative;z-index:5;padding:20px 28px;display:flex;align-items:center;justify-content:space-between;max-width:1200px;margin:0 auto}
+/* ── nav (sticky w/ glass effect on scroll) ── */
+.nav-wrap{position:sticky;top:0;z-index:50;transition:all .3s ease;padding-top:env(safe-area-inset-top,0)}
+.nav-wrap.scrolled{background:rgba(253,251,248,.78);backdrop-filter:saturate(180%) blur(14px);-webkit-backdrop-filter:saturate(180%) blur(14px);border-bottom:.5px solid var(--bd)}
+.nav{padding:18px 28px;display:flex;align-items:center;justify-content:space-between;max-width:1200px;margin:0 auto}
 .brand{display:flex;align-items:center;gap:8px}
-.brand .logo{font-family:'Playfair Display',serif;font-size:24px;font-weight:500;letter-spacing:1px}
+.brand .logo{font-family:'Playfair Display',serif;font-size:22px;font-weight:500;letter-spacing:1px;line-height:1}
 .brand .logo i{color:var(--accent);font-style:normal}
-.brand .tag{font-size:8.5px;letter-spacing:3px;color:var(--accent);text-transform:uppercase;margin-top:1px}
+.brand .tag{font-size:8.5px;letter-spacing:3px;color:var(--accent);text-transform:uppercase;margin-top:3px}
 .nav-links{display:flex;gap:18px;align-items:center;font-size:12.5px}
 .nav-links a{color:var(--stone);transition:color .2s;letter-spacing:.5px}
 .nav-links a:hover{color:var(--char)}
@@ -73,28 +82,6 @@ a{color:inherit;text-decoration:none}
 .btn.gold{background:linear-gradient(135deg,var(--accent),var(--gold));color:#fff;border-color:var(--gold)}
 .btn.line{background:var(--line);color:#fff;border-color:var(--line)}
 .btn.line:hover{background:#05a648}
-
-/* ── visual showcase (animated cardigan strip) ── */
-.showcase{position:relative;z-index:2;padding:0 14px;margin:0 auto 60px;max-width:1100px}
-.showcase-strip{display:flex;gap:18px;justify-content:center;flex-wrap:wrap;animation:fadeInUp 1.2s .6s ease both}
-.show-card{width:200px;aspect-ratio:3/4;border-radius:18px;background:var(--warm);box-shadow:var(--shadow-md);overflow:hidden;position:relative;transition:transform .35s ease,box-shadow .35s ease;display:flex;align-items:center;justify-content:center;border:.5px solid var(--bd)}
-.show-card:hover{transform:translateY(-6px) rotate(-1deg);box-shadow:var(--shadow-lg)}
-.show-card:nth-child(2):hover{transform:translateY(-6px) rotate(1deg)}
-.show-card:nth-child(3):hover{transform:translateY(-6px) rotate(-.5deg)}
-.show-card .badge{position:absolute;top:10px;left:10px;padding:4px 10px;background:var(--char);color:var(--warm);font-size:9px;letter-spacing:1.5px;text-transform:uppercase;border-radius:10px;font-weight:500}
-.show-card .swatch{width:80%;aspect-ratio:1;border-radius:18px;background:var(--alight);position:relative;display:flex;align-items:center;justify-content:center;font-size:60px;color:var(--accent);overflow:hidden}
-.show-card.c1 .swatch{background:linear-gradient(135deg,#F0E3D6,#E8D4BE)}
-.show-card.c2 .swatch{background:linear-gradient(135deg,#1E1C1A,#3a3633)}
-.show-card.c2 .swatch{color:#C9956B}
-.show-card.c3 .swatch{background:linear-gradient(135deg,#9A8F85,#7a7068);color:#FDFBF8}
-.show-card .pulse{position:absolute;width:18px;height:18px;border-radius:50%;background:var(--gold);animation:pulse 2.4s ease-in-out infinite;box-shadow:0 0 0 0 rgba(184,134,76,.6)}
-.show-card.c1 .pulse{top:32%;right:24%}
-.show-card.c2 .pulse{bottom:34%;left:26%;animation-delay:-1.2s}
-.show-card.c3 .pulse{top:44%;left:50%;animation-delay:-.6s}
-@keyframes pulse{
-  0%,100%{box-shadow:0 0 0 0 rgba(184,134,76,.5)}
-  50%{box-shadow:0 0 0 14px rgba(184,134,76,0)}
-}
 
 /* ── section base ── */
 section{position:relative;z-index:2}
@@ -176,17 +163,106 @@ section{position:relative;z-index:2}
 .reveal{opacity:0;transform:translateY(28px);transition:opacity .8s ease, transform .8s ease}
 .reveal.in{opacity:1;transform:translateY(0)}
 
+/* ── mobile bottom nav ── */
+.bottom-nav{display:none;position:fixed;left:14px;right:14px;bottom:calc(14px + env(safe-area-inset-bottom,0));z-index:40;background:rgba(253,251,248,.92);backdrop-filter:saturate(180%) blur(18px);-webkit-backdrop-filter:saturate(180%) blur(18px);border:.5px solid var(--bd-strong);border-radius:22px;padding:8px;box-shadow:0 12px 30px rgba(30,28,26,.12);grid-template-columns:1fr 1fr;gap:6px;transform:translateY(120%);transition:transform .35s cubic-bezier(.2,.8,.2,1)}
+.bottom-nav.show{transform:translateY(0)}
+.bottom-nav a{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:10px 8px;border-radius:16px;font-size:11.5px;letter-spacing:.6px;color:var(--stone);transition:all .2s;font-weight:500}
+.bottom-nav a span{font-size:18px;margin-bottom:3px}
+.bottom-nav a.primary{background:var(--char);color:var(--warm)}
+.bottom-nav a.primary span{color:var(--accent)}
+.bottom-nav a:active{transform:scale(.95)}
+
 /* ── responsive ── */
+@media(max-width:900px){
+  .menu-card{padding:28px 22px}
+}
+
 @media(max-width:640px){
-  .nav{padding:14px 16px}
-  .nav-links{gap:10px}
+  .nav{padding:14px 18px}
+  .nav-links{gap:0}
   .nav-links a:not(.nav-cta){display:none}
-  .hero{padding:30px 18px 50px}
-  .show-card{width:140px}
-  .wrap{padding:38px 18px}
-  .invite{padding:36px 22px}
-  .contact{padding:34px 20px}
-  .branch{padding:18px}
+  .nav-cta{padding:9px 14px;font-size:10.5px}
+  .brand .logo{font-size:20px}
+  .brand .tag{font-size:8px;letter-spacing:2.6px}
+
+  /* hero gets tighter, more impactful */
+  .hero{padding:36px 22px 40px}
+  .eyebrow{letter-spacing:3px;font-size:10.5px;margin-bottom:12px}
+  .hero h1{font-size:38px;line-height:1.1;letter-spacing:-.3px;margin-bottom:14px}
+  .hero h1 em::after{bottom:6px;height:3px}
+  .hero p{font-size:14.5px;line-height:1.65;margin-bottom:24px;max-width:360px}
+  .hero-actions .btn{height:54px;width:100%;max-width:300px;border-radius:16px}
+  .hero-actions{flex-direction:column;align-items:center;gap:10px}
+
+  /* sections breathe more */
+  .wrap{padding:44px 18px}
+  .section-title{font-size:30px;letter-spacing:-.2px;line-height:1.15}
+  .section-eyebrow{font-size:10px;letter-spacing:2.6px;margin-bottom:8px}
+  .section-sub{font-size:13.5px;line-height:1.65;margin-bottom:28px}
+
+  /* menu cards: wider tap, asymmetric depth */
+  .menu-grid{gap:14px}
+  .menu-card{padding:26px 20px;border-radius:20px}
+  .menu-card .icon{width:64px;height:64px;font-size:30px;margin-bottom:14px}
+  .menu-card h3{font-size:21px}
+  .menu-card p{font-size:13px;margin-bottom:14px}
+
+  /* history list: tighter, larger thumb */
+  .hist-card{padding:12px;gap:12px;border-radius:16px}
+  .hist-thumb{width:54px;height:54px;border-radius:12px;font-size:22px}
+  .hist-id{font-size:12.5px}
+  .hist-meta{font-size:11px}
+  .hist-total{font-size:16px}
+  .hist-status{font-size:9.5px;padding:2px 7px}
+
+  /* invite: shrink decorations so they don't dominate */
+  .invite{padding:34px 22px;border-radius:20px}
+  .invite::before{font-size:130px;top:-10px;right:10px}
+  .invite::after{font-size:100px;bottom:-20px;left:-10px}
+  .invite h2{font-size:23px;line-height:1.3}
+  .invite p{font-size:14px}
+
+  /* steps: compact horizontal cards */
+  .steps{grid-template-columns:1fr 1fr;gap:10px;margin-top:20px}
+  .step{padding:14px 8px;background:var(--warm);border-radius:14px;border:.5px solid var(--bd)}
+  .step-num{width:38px;height:38px;font-size:16px;margin-bottom:8px}
+  .step h4{font-size:13px}
+  .step p{font-size:11.5px;line-height:1.5}
+
+  /* contact: stronger feel on dark card */
+  .contact{padding:36px 22px;border-radius:22px}
+  .contact .section-title{font-size:26px}
+  .branches{grid-template-columns:1fr;gap:10px;margin-top:20px}
+  .branch{padding:18px;border-radius:14px}
+  .branch h4{font-size:16px;margin-bottom:6px}
+  .branch p{font-size:13px;line-height:1.6}
+  .contact-actions .btn{width:100%;max-width:300px}
+  .contact-actions{flex-direction:column;align-items:center;gap:10px}
+
+  /* keep buttons large-finger-friendly everywhere */
+  .btn{height:48px;font-size:11.5px;letter-spacing:1.4px;padding:0 20px}
+
+  /* show floating mobile bottom nav */
+  .bottom-nav{display:grid}
+
+  /* leave room for bottom nav so footer + last section aren't hidden */
+  body{padding-bottom:88px}
+
+  /* lighten background blobs a bit on mobile so text contrast stays high */
+  .bg-blob{opacity:.28;filter:blur(60px)}
+  .bg-blob.b1{width:340px;height:340px;top:-100px;left:-100px}
+  .bg-blob.b2{width:300px;height:300px;bottom:-80px;right:-80px}
+  .bg-blob.b3{width:260px;height:260px}
+
+  .foot{padding:24px 16px 14px;font-size:10.5px}
+}
+
+@media(max-width:380px){
+  .hero h1{font-size:34px}
+  .section-title{font-size:26px}
+  .nav{padding:12px 16px}
+  .wrap{padding:36px 16px}
+  .invite,.contact{padding:30px 18px}
 }
 </style>
 </head>
@@ -196,20 +272,22 @@ section{position:relative;z-index:2}
 <div class="bg-blob b2"></div>
 <div class="bg-blob b3"></div>
 
-<header class="nav">
-  <div class="brand">
-    <div>
-      <div class="logo">Casual <i>Look</i></div>
-      <div class="tag">Cardigan Studio</div>
+<div class="nav-wrap" id="nav-wrap">
+  <header class="nav">
+    <div class="brand">
+      <div>
+        <div class="logo">Casual <i>Look</i></div>
+        <div class="tag">Cardigan Studio</div>
+      </div>
     </div>
-  </div>
-  <nav class="nav-links">
-    <a href="#menu">เริ่มต้น</a>
-    <a href="#how">ขั้นตอน</a>
-    <a href="#contact">ติดต่อ</a>
-    <a class="nav-cta" href="studio.html">Customize ↗</a>
-  </nav>
-</header>
+    <nav class="nav-links">
+      <a href="#menu">เริ่มต้น</a>
+      <a href="#how">ขั้นตอน</a>
+      <a href="#contact">ติดต่อ</a>
+      <a class="nav-cta" href="studio.html">Customize ↗</a>
+    </nav>
+  </header>
+</div>
 
 <!-- HERO -->
 <section class="hero">
@@ -219,15 +297,6 @@ section{position:relative;z-index:2}
   <div class="hero-actions">
     <a class="btn primary" href="studio.html">✦ ออกแบบเสื้อตอนนี้</a>
     <a class="btn" href="#track">📦 ติดตามออเดอร์</a>
-  </div>
-</section>
-
-<!-- SHOWCASE -->
-<section class="showcase">
-  <div class="showcase-strip">
-    <div class="show-card c1"><span class="badge">Cream</span><div class="swatch">✦<div class="pulse"></div></div></div>
-    <div class="show-card c2"><span class="badge">Charcoal</span><div class="swatch">❋<div class="pulse"></div></div></div>
-    <div class="show-card c3"><span class="badge">Stone</span><div class="swatch">✿<div class="pulse"></div></div></div>
   </div>
 </section>
 
@@ -319,6 +388,12 @@ section{position:relative;z-index:2}
   © Casual Look · Cardigan Studio — Designed with ✦ in Bangkok
 </footer>
 
+<!-- Mobile floating bottom nav -->
+<nav class="bottom-nav" id="bottom-nav" aria-label="Mobile navigation">
+  <a class="primary" href="studio.html"><span>✦</span>ออกแบบเสื้อ</a>
+  <a href="track.html"><span>📦</span>ติดตามออเดอร์</a>
+</nav>
+
 <script>
 // ── Device id (used to fetch order history from server) ──
 function getDeviceId(){
@@ -341,6 +416,20 @@ const io = new IntersectionObserver(entries=>{
   });
 }, { threshold: 0.12 });
 document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
+
+// ── Sticky nav glass effect + mobile bottom nav reveal ──
+const navWrap = document.getElementById('nav-wrap');
+const bottomNav = document.getElementById('bottom-nav');
+let lastY = 0;
+function onScroll(){
+  const y = window.scrollY || window.pageYOffset;
+  if(y > 12) navWrap.classList.add('scrolled'); else navWrap.classList.remove('scrolled');
+  // show bottom nav after user scrolls past hero
+  if(y > 200) bottomNav.classList.add('show'); else bottomNav.classList.remove('show');
+  lastY = y;
+}
+window.addEventListener('scroll', onScroll, { passive: true });
+onScroll();
 
 // ── Order history ──
 const ORDER_API = 'https://casuallook-bot.iceamonwat.workers.dev';
