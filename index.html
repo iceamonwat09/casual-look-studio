@@ -70,7 +70,8 @@ a{color:inherit;text-decoration:none}
 .hero h1{font-family:'Playfair Display',serif;font-size:clamp(40px,7vw,72px);font-weight:400;line-height:1.05;letter-spacing:-.5px;margin-bottom:20px;animation:fadeInUp 1s .15s ease both}
 .hero h1 em{font-style:italic;color:var(--gold);position:relative}
 .hero h1 em::after{content:'';position:absolute;bottom:8px;left:0;right:0;height:4px;background:var(--accent-soft);z-index:-1;border-radius:2px}
-.hero p{font-size:16px;color:var(--stone);max-width:560px;margin:0 auto 32px;line-height:1.7;animation:fadeInUp 1s .3s ease both}
+.hero-sub-line{font-family:'Playfair Display',serif;font-style:italic;font-size:clamp(17px,2.4vw,21px);color:var(--gold);max-width:560px;margin:0 auto 22px;line-height:1.4;letter-spacing:.2px;animation:fadeInUp 1s .25s ease both}
+.hero p{font-size:15.5px;color:var(--stone);max-width:600px;margin:0 auto 32px;line-height:1.8;animation:fadeInUp 1s .4s ease both}
 @keyframes fadeInUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
 
 .hero-actions{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;animation:fadeInUp 1s .45s ease both}
@@ -188,9 +189,10 @@ section{position:relative;z-index:2}
   /* hero gets tighter, more impactful */
   .hero{padding:36px 22px 40px}
   .eyebrow{letter-spacing:3px;font-size:10.5px;margin-bottom:12px}
-  .hero h1{font-size:38px;line-height:1.1;letter-spacing:-.3px;margin-bottom:14px}
+  .hero h1{font-size:38px;line-height:1.1;letter-spacing:-.3px;margin-bottom:10px}
   .hero h1 em::after{bottom:6px;height:3px}
-  .hero p{font-size:14.5px;line-height:1.65;margin-bottom:24px;max-width:360px}
+  .hero-sub-line{font-size:16px;margin-bottom:18px;max-width:340px;line-height:1.4}
+  .hero p{font-size:14px;line-height:1.7;margin-bottom:24px;max-width:360px}
   .hero-actions .btn{height:54px;width:100%;max-width:300px;border-radius:16px}
   .hero-actions{flex-direction:column;align-items:center;gap:10px}
 
@@ -291,9 +293,10 @@ section{position:relative;z-index:2}
 
 <!-- HERO -->
 <section class="hero">
-  <div class="eyebrow">Design Your Own Cardigan</div>
-  <h1>ออกแบบเสื้อ <em>ในแบบของคุณ</em><br>เริ่มต้นง่าย ส่งถึงบ้าน</h1>
-  <p>เลือกสี · วางสติ๊กเกอร์ · พิมพ์ข้อความ — สร้างเสื้อ Cardigan ที่ไม่ซ้ำใคร เห็นราคาทันทีก่อนสั่ง พร้อมติดตามทุกสถานะของออเดอร์</p>
+  <div class="eyebrow">Make It Yours</div>
+  <h1>ออกแบบเสื้อ <em>ในแบบของคุณ</em></h1>
+  <div class="hero-sub-line">เพราะสไตล์ที่ดีที่สุด คือสไตล์ที่เป็นตัวคุณเอง</div>
+  <p>Casual Look ให้ความสำคัญกับ ความเป็นเอกลักษณ์ ความโดดเด่นไม่ซ้ำใคร ไม่ใช่เพียงแค่สินค้าที่ Custom แต่รวมถึงทุกชิ้นที่มาจากเรา</p>
   <div class="hero-actions">
     <a class="btn primary" href="studio.html">✦ ออกแบบเสื้อตอนนี้</a>
     <a class="btn" href="#track">📦 ติดตามออเดอร์</a>
@@ -476,33 +479,74 @@ function loadLocalHistory(){
   }catch(e){}
 }
 
-async function loadServerHistory(){
-  const did=getDeviceId();
-  if(!did) return;
-  try{
-    const r=await fetch(`${ORDER_API}/orders/by-device?did=${encodeURIComponent(did)}`);
-    if(!r.ok) return;
-    const j=await r.json();
-    if(!j.ok||!Array.isArray(j.orders)||!j.orders.length) return;
+// For each order saved in localStorage, fetch its current status from the
+// per-order public endpoint (uses the magic-link token). This works for ALL
+// orders (including legacy ones created before deviceId was introduced) and
+// always reflects the latest admin update.
+async function refreshHistoryFromServer(){
+  let local=[];
+  try{ local=JSON.parse(localStorage.getItem('cl_orders')||'[]'); }catch(e){ return; }
+  if(!local.length){
+    // Fallback: try device-based lookup (in case localStorage was cleared but device id persists somehow)
+    try{
+      const did=getDeviceId();
+      if(!did) return;
+      const r=await fetch(`${ORDER_API}/orders/by-device?did=${encodeURIComponent(did)}&_=${Date.now()}`);
+      if(!r.ok) return;
+      const j=await r.json();
+      if(j.ok && Array.isArray(j.orders) && j.orders.length){
+        try{ localStorage.setItem('cl_orders',JSON.stringify(j.orders.slice(0,20))); }catch(e){}
+        renderHistory(j.orders);
+      }
+    }catch(e){}
+    return;
+  }
 
-    // Merge server data into localStorage (server is source of truth for status)
-    let local=[];
-    try{ local=JSON.parse(localStorage.getItem('cl_orders')||'[]'); }catch(e){}
-    const map=new Map();
-    [...local, ...j.orders].forEach(o=>{
-      const key=o.id;
-      const merged=Object.assign({},map.get(key)||{},o);
-      map.set(key, merged);
-    });
-    const merged=[...map.values()].sort((a,b)=>(b.createdAt||b.at||0)-(a.createdAt||a.at||0));
-    try{ localStorage.setItem('cl_orders',JSON.stringify(merged.slice(0,20))); }catch(e){}
-    renderHistory(merged);
-  }catch(e){ /* ignore network errors */ }
+  // Refresh each local order against the live server (parallel)
+  const results = await Promise.all(local.map(async (o) => {
+    if(!o.id || !o.token) return o; // can't refresh without token, keep as-is
+    try{
+      const r = await fetch(
+        `${ORDER_API}/orders/${encodeURIComponent(o.id)}?t=${encodeURIComponent(o.token)}&_=${Date.now()}`,
+        { cache: 'no-store' }
+      );
+      if(r.status === 404) return null; // order deleted server-side
+      if(!r.ok) return o;
+      const j = await r.json();
+      if(!j.ok || !j.order) return o;
+      return {
+        id: j.order.id,
+        token: o.token,
+        status: j.order.status,
+        total: j.order.total,
+        designUrl: j.order.designUrl || o.designUrl || '',
+        tracking: j.order.tracking || '',
+        itemCount: (j.order.items && j.order.items.length) || o.itemCount || 0,
+        createdAt: j.order.createdAt || o.createdAt || o.at || 0,
+        updatedAt: j.order.updatedAt || o.updatedAt || 0,
+        at: o.at || j.order.createdAt,
+      };
+    }catch(e){
+      return o; // network error: keep cached copy
+    }
+  }));
+
+  const fresh = results
+    .filter(Boolean)
+    .sort((a,b)=>(b.createdAt||b.at||0)-(a.createdAt||a.at||0));
+
+  try{ localStorage.setItem('cl_orders',JSON.stringify(fresh.slice(0,20))); }catch(e){}
+  renderHistory(fresh);
 }
 
-// Show local history immediately, then refresh from server
+// Show local history immediately (instant paint), then refresh from server
 loadLocalHistory();
-loadServerHistory();
+refreshHistoryFromServer();
+
+// Re-sync when user returns to the tab (admin may have updated meanwhile)
+document.addEventListener('visibilitychange', () => {
+  if(!document.hidden) refreshHistoryFromServer();
+});
 </script>
 </body>
 </html>
