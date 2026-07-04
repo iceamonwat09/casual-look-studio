@@ -348,6 +348,27 @@ section{position:relative;z-index:2}
 .branch:hover{box-shadow:0 12px 26px -14px rgba(0,0,0,.5)}
 .nav-cta:hover{box-shadow:0 8px 20px -8px rgba(51,32,43,.5)}
 
+/* ── lookbook (polaroid scrapbook) ── */
+.look-grid{display:flex;flex-wrap:wrap;justify-content:center;align-items:flex-start;gap:30px 26px;max-width:1020px;margin:6px auto 0;padding:14px 6px}
+.look-card{position:relative;width:214px;margin:0;background:#fff;border:.5px solid var(--bd);border-radius:14px;padding:10px 10px 6px;cursor:pointer;
+  box-shadow:0 14px 34px -14px rgba(201,84,131,.32),0 2px 8px rgba(51,32,43,.07);
+  transition:opacity .8s ease,transform .35s cubic-bezier(.34,1.45,.64,1),rotate .35s cubic-bezier(.34,1.45,.64,1),box-shadow .35s}
+.look-card img{width:100%;aspect-ratio:4/5;object-fit:cover;object-position:top;border-radius:9px;display:block;background:var(--alight)}
+.look-card figcaption{font-size:9.5px;letter-spacing:3px;text-transform:uppercase;color:var(--stone);text-align:center;padding:10px 0 6px;font-weight:500}
+.look-pin{position:absolute;top:-15px;left:50%;transform:translateX(-50%) rotate(-10deg);font-size:24px;z-index:2;filter:drop-shadow(0 3px 5px rgba(51,32,43,.28));transition:transform .3s}
+.look-card:hover .look-pin{transform:translateX(-50%) rotate(8deg) scale(1.15)}
+.look-card.lc1{width:246px;rotate:-2.4deg}
+.look-card.lc2{rotate:1.8deg;margin-top:24px}
+.look-card.lc3{rotate:-1.6deg;margin-top:8px}
+.look-card.lc4{rotate:2.6deg;margin-top:30px}
+.look-card:hover{rotate:0deg;transform:translateY(-10px) scale(1.04);box-shadow:0 30px 60px -20px rgba(201,84,131,.45),0 0 0 1.5px rgba(230,122,160,.35);z-index:3}
+.look-card::after{content:'';position:absolute;top:-8px;left:50%;transform:translateX(-50%) rotate(-3deg);width:64px;height:20px;background:rgba(246,203,221,.55);border:.5px solid rgba(230,122,160,.25);border-radius:2px;backdrop-filter:blur(1px)}
+@media(max-width:640px){
+  .look-grid{flex-wrap:nowrap;justify-content:flex-start;overflow-x:auto;gap:20px;padding:22px 18px 26px;scroll-snap-type:x mandatory;scrollbar-width:none;-webkit-overflow-scrolling:touch;max-width:none;margin-left:-18px;margin-right:-18px}
+  .look-grid::-webkit-scrollbar{display:none}
+  .look-card,.look-card.lc1{flex:0 0 74%;width:auto;max-width:290px;margin-top:6px;scroll-snap-align:center}
+}
+
 @media (prefers-reduced-motion:reduce){
   .hero::before,.btn::before,.menu-card:hover .icon,.bg-blob,.hero-sparkle,.invite::before,.invite::after{animation:none !important}
 }
@@ -415,6 +436,55 @@ section{position:relative;z-index:2}
       <p>ดูสถานะออเดอร์ของคุณ — รอชำระ / ผลิต / จัดส่ง / ได้รับสินค้า + อัปโหลดสลิปได้</p>
       <span class="arrow">ดูออเดอร์ →</span>
     </a>
+  </div>
+</section>
+
+<!-- LOOKBOOK -->
+<script>
+// Lookbook: hide any card whose image is missing; hide whole section if none loaded.
+// (Photos are read from gallery/look-1.jpg ... look-4.jpg — upload files to /gallery)
+function lookImgFail(img){
+  var card = img.closest('.look-card');
+  if(card) card.style.display = 'none';
+  var cards = document.querySelectorAll('#lookbook-sec .look-card');
+  var anyVisible = false;
+  cards.forEach(function(c){ if(c.style.display !== 'none') anyVisible = true; });
+  if(!anyVisible){
+    var sec = document.getElementById('lookbook-sec');
+    if(sec) sec.style.display = 'none';
+  }
+}
+</script>
+<section class="wrap" id="lookbook-sec">
+  <div class="section-eyebrow reveal">Lookbook</div>
+  <h2 class="section-title reveal">ไอเดียแต่งเสื้อจาก Casual Look</h2>
+  <p class="section-sub reveal">ตัวอย่างงานจริงและแรงบันดาลใจ — หยิบไอเดียที่ชอบ แล้วไปออกแบบเวอร์ชันของคุณเองใน Studio</p>
+
+  <div class="look-grid">
+    <figure class="look-card lc1 reveal">
+      <span class="look-pin" aria-hidden="true">🧸</span>
+      <img src="gallery/look-1.jpg" alt="Lookbook 1" loading="lazy" onerror="lookImgFail(this)">
+      <figcaption>Look 01 ✦</figcaption>
+    </figure>
+    <figure class="look-card lc2 reveal">
+      <span class="look-pin" aria-hidden="true">🎀</span>
+      <img src="gallery/look-2.jpg" alt="Lookbook 2" loading="lazy" onerror="lookImgFail(this)">
+      <figcaption>Look 02 ✦</figcaption>
+    </figure>
+    <figure class="look-card lc3 reveal">
+      <span class="look-pin" aria-hidden="true">🍒</span>
+      <img src="gallery/look-3.jpg" alt="Lookbook 3" loading="lazy" onerror="lookImgFail(this)">
+      <figcaption>Look 03 ✦</figcaption>
+    </figure>
+    <figure class="look-card lc4 reveal">
+      <span class="look-pin" aria-hidden="true">✨</span>
+      <img src="gallery/look-4.jpg" alt="Lookbook 4" loading="lazy" onerror="lookImgFail(this)">
+      <figcaption>Look 04 ✦</figcaption>
+    </figure>
+  </div>
+
+  <div class="hero-actions reveal" style="margin-top:28px">
+    <a class="btn gold" href="studio.html">✦ ออกแบบลุคของคุณเอง</a>
   </div>
 </section>
 
