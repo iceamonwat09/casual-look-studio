@@ -332,8 +332,8 @@ section{position:relative;z-index:2}
 .btn.gold:hover{box-shadow:0 18px 36px -12px rgba(201,84,131,.55)}
 .btn.line:hover{box-shadow:0 18px 36px -12px rgba(6,199,85,.45)}
 
-.hero::before{content:'';position:absolute;top:-60px;left:50%;transform:translateX(-50%);width:min(720px,92vw);height:440px;border-radius:50%;background:radial-gradient(closest-side,rgba(246,203,221,.55),rgba(250,223,233,.25) 55%,transparent 78%);z-index:-1;pointer-events:none;animation:heroGlow 8s ease-in-out infinite}
-@keyframes heroGlow{0%,100%{opacity:.65;transform:translateX(-50%) scale(1)}50%{opacity:1;transform:translateX(-50%) scale(1.07)}}
+.hero::before{content:'';position:absolute;bottom:-130px;left:50%;transform:translateX(-50%);width:min(720px,92vw);height:340px;border-radius:50%;background:radial-gradient(closest-side,rgba(246,203,221,.45),rgba(250,223,233,.2) 55%,transparent 78%);z-index:-1;pointer-events:none;animation:heroGlow 8s ease-in-out infinite}
+@keyframes heroGlow{0%,100%{opacity:.55;transform:translateX(-50%) scale(1)}50%{opacity:.9;transform:translateX(-50%) scale(1.07)}}
 
 .menu-card:hover{box-shadow:0 26px 54px -20px rgba(201,84,131,.38),0 0 0 1.5px rgba(230,122,160,.35)}
 .menu-card .icon{box-shadow:0 10px 22px -10px rgba(201,84,131,.45)}
@@ -414,28 +414,6 @@ section{position:relative;z-index:2}
   <div class="hero-actions">
     <a class="btn primary" href="studio.html">✦ ออกแบบเสื้อตอนนี้</a>
     <a class="btn" href="#track">📦 ติดตามออเดอร์</a>
-  </div>
-</section>
-
-<!-- MAIN MENU -->
-<section id="menu" class="wrap">
-  <div class="section-eyebrow reveal">เริ่มต้น</div>
-  <h2 class="section-title reveal">คุณอยากทำอะไรวันนี้?</h2>
-  <p class="section-sub reveal">เลือกหนึ่งใน 2 เมนูหลัก เริ่มออกแบบใหม่ หรือกลับมาดูออเดอร์ที่เคยสั่ง</p>
-
-  <div class="menu-grid">
-    <a class="menu-card primary reveal" href="studio.html">
-      <div class="icon">✦</div>
-      <h3>ออกแบบเสื้อ</h3>
-      <p>เปิด Studio เพื่อเลือกสี วางสติ๊กเกอร์ พิมพ์ข้อความ และคำนวณราคาแบบเรียลไทม์</p>
-      <span class="arrow">เริ่มออกแบบ →</span>
-    </a>
-    <a class="menu-card reveal" id="track" href="track.html">
-      <div class="icon">📦</div>
-      <h3>ติดตามออเดอร์</h3>
-      <p>ดูสถานะออเดอร์ของคุณ — รอชำระ / ผลิต / จัดส่ง / ได้รับสินค้า + อัปโหลดสลิปได้</p>
-      <span class="arrow">ดูออเดอร์ →</span>
-    </a>
   </div>
 </section>
 
@@ -536,6 +514,28 @@ function lookImgFail(img){
 
   <div class="hero-actions reveal" style="margin-top:28px">
     <a class="btn gold" href="studio.html">✦ ออกแบบลุคของคุณเอง</a>
+  </div>
+</section>
+
+<!-- MAIN MENU -->
+<section id="menu" class="wrap">
+  <div class="section-eyebrow reveal">เริ่มต้น</div>
+  <h2 class="section-title reveal">คุณอยากทำอะไรวันนี้?</h2>
+  <p class="section-sub reveal">เลือกหนึ่งใน 2 เมนูหลัก เริ่มออกแบบใหม่ หรือกลับมาดูออเดอร์ที่เคยสั่ง</p>
+
+  <div class="menu-grid">
+    <a class="menu-card primary reveal" href="studio.html">
+      <div class="icon">✦</div>
+      <h3>ออกแบบเสื้อ</h3>
+      <p>เปิด Studio เพื่อเลือกสี วางสติ๊กเกอร์ พิมพ์ข้อความ และคำนวณราคาแบบเรียลไทม์</p>
+      <span class="arrow">เริ่มออกแบบ →</span>
+    </a>
+    <a class="menu-card reveal" id="track" href="track.html">
+      <div class="icon">📦</div>
+      <h3>ติดตามออเดอร์</h3>
+      <p>ดูสถานะออเดอร์ของคุณ — รอชำระ / ผลิต / จัดส่ง / ได้รับสินค้า + อัปโหลดสลิปได้</p>
+      <span class="arrow">ดูออเดอร์ →</span>
+    </a>
   </div>
 </section>
 
