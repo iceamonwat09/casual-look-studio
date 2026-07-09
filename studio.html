@@ -701,11 +701,35 @@ function switchShirt(idx){
 const GITHUB_REPO = 'iceamonwat09/casual-look-studio';
 const GITHUB_STICKERS_URL = 'https://raw.githubusercontent.com/'+GITHUB_REPO+'/main/stickers';
 const SIZES=['small','medium','large'];
-const CACHE_KEY='cl_accessory_cache_v1', CACHE_TTL=10*60*1000;
+const CACHE_KEY='cl_accessory_cache_v2', CACHE_TTL=10*60*1000;
 
 const BUILTIN = [];
 let currentAccSize='small';
 
+// ── PRIMARY: static manifest served from this site itself (GitHub Pages CDN) ──
+// ไม่มี rate-limit เหมือน GitHub API — ไฟล์นี้ถูก generate อัตโนมัติโดย GitHub Action
+// (.github/workflows/stickers-manifest.yml) ทุกครั้งที่มีการ upload สติ๊กเกอร์ใหม่
+async function fetchManifest(){
+  try{
+    const res=await fetch('stickers/manifest.json',{cache:'no-cache'});
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    const m=await res.json();
+    const out=[];
+    SIZES.forEach(size=>{
+      (Array.isArray(m[size])?m[size]:[]).forEach(f=>{
+        const file=(typeof f==='string')?f:(f.file||'');
+        if(!file || !/\.(png|jpg|jpeg|webp|gif)$/i.test(file)) return;
+        out.push({name:file.replace(/\.[^.]+$/,''), url:'stickers/'+size+'/'+file, size});
+      });
+    });
+    return out;
+  }catch(e){
+    console.warn('fetchManifest failed:',e.message);
+    return [];
+  }
+}
+
+// ── FALLBACK: GitHub API (rate-limited 60/hr — ใช้เมื่อ manifest ใช้ไม่ได้เท่านั้น) ──
 async function fetchFolder(size){
   const api='https://api.github.com/repos/'+GITHUB_REPO+'/contents/stickers/'+size;
   try{
@@ -737,9 +761,12 @@ async function loadBuiltinStickers(){
 }
 
 async function refreshBuiltinFromNetwork(){
-  const results=await Promise.all(SIZES.map(fetchFolder));
-  const collected=[];
-  SIZES.forEach((size,si)=>{ results[si].forEach(it=>collected.push(it)); });
+  // 1) manifest จากเว็บตัวเอง (เร็ว, ไม่มีโควตา)  2) GitHub API (fallback เดิม)
+  let collected=await fetchManifest();
+  if(!collected.length){
+    const results=await Promise.all(SIZES.map(fetchFolder));
+    SIZES.forEach((size,si)=>{ results[si].forEach(it=>collected.push(it)); });
+  }
   if(collected.length){
     BUILTIN.length=0;
     collected.forEach((it,i)=>BUILTIN.push({id:'bi_'+it.size+'_'+i, ...it}));

@@ -1,0 +1,42 @@
+name: Update stickers manifest
+
+# Regenerates stickers/manifest.json whenever sticker images change,
+# so studio.html can list accessories from this site itself
+# (GitHub Pages CDN) instead of the rate-limited GitHub API.
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'stickers/**'
+      - '!stickers/manifest.json'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  manifest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Generate stickers/manifest.json
+        run: |
+          python3 - <<'EOF'
+          import json, os
+          sizes = ['small', 'medium', 'large']
+          exts = ('.png', '.jpg', '.jpeg', '.webp', '.gif')
+          m = {}
+          for s in sizes:
+              d = os.path.join('stickers', s)
+              m[s] = sorted([f for f in os.listdir(d) if f.lower().endswith(exts)]) if os.path.isdir(d) else []
+          json.dump(m, open('stickers/manifest.json', 'w'), ensure_ascii=False, indent=1)
+          print({k: len(v) for k, v in m.items()})
+          EOF
+
+      - name: Commit and push if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add stickers/manifest.json
+          git diff --cached --quiet || (git commit -m "chore: update stickers manifest" && git push)
